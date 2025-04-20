@@ -77,6 +77,8 @@ struct Component<T: AddInWrapper> {
     locale_ptr: Box<LocaleBaseVTable<T>>,
     usr_lang_ptr: Box<UserLanguageBaseVTable<T>>,
 
+    destroy: unsafe extern "system" fn(*mut *mut Component<T>),
+
     // storage for additional interfaces
     memory_manager_ptr: Option<&'static MemoryManager>,
     connection_ptr: Option<&'static Connection>,
@@ -84,7 +86,6 @@ struct Component<T: AddInWrapper> {
     user_interface_language_code: Option<String>,
 
     // rust part
-    destroy: unsafe extern "system" fn(*mut *mut Component<T>),
     addin: T,
 }
 
@@ -109,10 +110,12 @@ pub unsafe fn create_component<T: AddInWrapper>(
         usr_lang_ptr: Default::default(),
 
         destroy: destroy::<T>,
+
         memory_manager_ptr: Default::default(),
         connection_ptr: Default::default(),
         locale: Default::default(),
         user_interface_language_code: Default::default(),
+        
         addin,
     });
 

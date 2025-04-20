@@ -260,7 +260,12 @@ unsafe extern "system" fn call_as_proc<T: AddInWrapper>(
         return false;
     };
 
-    let parameters_raw = from_raw_parts_mut(params, size_array as usize);
+    let parameters_raw = if params.is_null() && size_array == 0 { 
+        &mut [] 
+    } else {
+        from_raw_parts_mut(params, size_array as usize)
+    };
+    
     let mut parameters_values =
         ParamValues::new(parameters_raw.iter().map(ParamValue::from).collect());
 
