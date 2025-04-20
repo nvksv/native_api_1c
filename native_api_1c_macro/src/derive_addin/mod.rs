@@ -36,7 +36,6 @@ fn derive_result(input: &DeriveInput) -> Result<TokenStream, TokenStream> {
 
 fn get_addin_name_from_attribute( input: &DeriveInput ) -> Result<Option<TokenStream>, syn::Error> {
 
-    println!("get_addin_name_from_attribute")
     for attr in &input.attrs {
         if attr.path().is_ident("add_in") {
             let nested = match attr.parse_args_with(syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated) {

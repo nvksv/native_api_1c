@@ -6,6 +6,7 @@ use native_api_1c::{
 };
 
 #[derive(AddIn)]
+#[add_in(name = "Имя")]
 pub struct SampleAddIn {
     /// connection with 1C, used for calling events
     /// Arc is used to allow multiple threads to access the connection
