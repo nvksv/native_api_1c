@@ -34,6 +34,29 @@ fn derive_result(input: &DeriveInput) -> Result<TokenStream, TokenStream> {
     })
 }
 
+fn get_addin_name_from_attribute( input: &DeriveInput ) -> Result<Option<TokenStream>, syn::Error> {
+
+    for attr in &input.attrs {
+        if attr.path().is_ident("add_in") {
+            let nested = match attr.parse_args_with(syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated) {
+                Ok(r) => r,
+                Err(e) => return Err(e),
+            };
+
+            for meta in nested {
+                match &meta {
+                    syn::Meta::NameValue(syn::MetaNameValue{path, value, ..}) if path.is_ident("name") => {
+                        return Ok(Some( quote!{ #value } ));
+                    },
+                    _ => {},
+                }
+            }
+        }
+    };
+
+    Ok(None)
+}
+
 fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, darling::Error> {
     let struct_ident = &input.ident;
     let syn::Data::Struct(struct_data) = &input.data else {
@@ -42,7 +65,11 @@ fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, dar
             &struct_ident.span()
         );
     };
-    let add_in_name_literal = str_literal_token(&struct_ident.to_string(), struct_ident)?;
+    let mut add_in_name_literal = str_literal_token(&struct_ident.to_string(), struct_ident)?;
+
+    if let Some(add_in_name) = get_addin_name_from_attribute(input)? {
+        add_in_name_literal = add_in_name;
+    }
 
     let props = parse_props(struct_data)?;
     let functions = parse_functions(struct_data)?;
