@@ -26,7 +26,6 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetMethodNameCollector {
             let name_ru_literal = func_desc.name_ru_literal.clone();
 
             get_func_name_body.extend(quote! {
-                #get_func_name_body
                 if num == #func_index && alias == 0 {
                     return Some(native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil(
                         #name_literal).into()
