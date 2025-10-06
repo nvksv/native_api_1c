@@ -83,7 +83,7 @@ impl ParamValues {
         self.values.is_empty()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<ParamValue> {
+    pub fn iter(&self) -> std::slice::Iter<'_, ParamValue> {
         self.values.iter()
     }
 }
