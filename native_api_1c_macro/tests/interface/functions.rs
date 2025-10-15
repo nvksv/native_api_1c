@@ -76,7 +76,7 @@ fn test_get_n_methods(add_in: TestAddIn) {
 #[case(OUT_FUNCTION_NAME_RU, Some(2))]
 #[case(INVALID_NAME, None)]
 fn test_find_method(add_in: TestAddIn, #[case] name: &str, #[case] expected: Option<usize>) {
-    assert_eq!(add_in.find_method(U16CString::from_str_truncate(name).as_slice()), expected);
+    assert_eq!(add_in.find_method(&U16CString::from_str_truncate(name)), expected);
 }
 
 #[rstest]
@@ -97,8 +97,8 @@ fn test_get_method_name(
     #[case] expected: Option<&str>,
 ) {
     assert_eq!(
-        add_in.get_method_name(method_i, alias_i),
-        expected.map(|s| U16CString::from_str_truncate(s).into_vec_with_nul())
+        add_in.get_method_name(method_i, alias_i).map(|s| s.to_ucstring()),
+        expected.map(|s| U16CString::from_str_truncate(s))
     );
 }
 
@@ -118,7 +118,7 @@ fn test_get_n_params(add_in: TestAddIn, #[case] method_i: usize, #[case] n_param
 #[case(1, 0, None)]
 #[case(1, 1, Some(ParamValue::I32(DEFAULT_VALUE)))]
 #[case(1, 42, None)]
-#[case(2, 0, Some(ParamValue::String(U16CString::from_str_truncate(OUT_STR).into_vec_with_nul())))]
+#[case(2, 0, Some(ParamValue::String(U16CString::from_str_truncate(OUT_STR))))]
 #[case(2, 42, None)]
 #[case(3, 0, None)]
 fn test_get_param_def_value(
@@ -169,7 +169,7 @@ fn test_call_procedure(mut add_in: TestAddIn) {
 
 #[rstest]
 fn test_call_out_function(mut add_in: TestAddIn) {
-    let out_str = U16CString::from_str_truncate("1C").into_vec_with_nul();
+    let out_str = U16CString::from_str_truncate("1C");
     let mut params = ParamValues::new(vec![ParamValue::String(out_str)]);
 
     let result = add_in.call_as_func(2, &mut params);
@@ -177,5 +177,5 @@ fn test_call_out_function(mut add_in: TestAddIn) {
 
     let result = add_in.call_as_proc(2, &mut params);
     assert!(result.is_ok());
-    assert_eq!(params[0], ParamValue::String(U16CString::from_str_truncate("Hello, 1C!").into_vec_with_nul()));
+    assert_eq!(params[0], ParamValue::String(U16CString::from_str_truncate("Hello, 1C!")));
 }

@@ -20,6 +20,11 @@ pub struct FuncDesc {
     pub name_literal: TokenStream,
     pub name_ru_literal: TokenStream,
 
+    pub name_const: TokenStream,
+    pub name_ru_const: TokenStream,
+    pub name_slice_const: TokenStream,
+    pub name_ru_slice_const: TokenStream,
+
     pub params: Vec<FuncArgumentDesc>,
     pub return_value: ReturnTypeDesc,
 }

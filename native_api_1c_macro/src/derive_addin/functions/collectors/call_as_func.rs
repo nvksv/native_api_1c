@@ -30,10 +30,10 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for CallAsFuncCollector {
             let return_val_ident = Ident::new("val", proc_macro2::Span::call_site());
             let call_func = func_call_tkn(func_desc, Some(&return_val_ident));
             body.extend(quote! {
-                if method_num == #func_index {
+                #func_index => {
                     #call_func
-                    return Ok(val);
-                };
+                    Ok(val)
+                },
             });
         }
 
@@ -45,8 +45,12 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for CallAsFuncCollector {
             ) -> native_api_1c::native_api_1c_core::interface::AddInWrapperResult<
                 native_api_1c::native_api_1c_core::interface::ParamValue
             > {
-                #body
-                Err(())
+                match method_num {
+                    #body
+                    _ => {
+                        Err(())
+                    }
+                }
             }
         };
 

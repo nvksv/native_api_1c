@@ -11,6 +11,7 @@ pub mod get_n_methods;
 pub mod get_n_params;
 pub mod get_param_def_value;
 pub mod has_ret_val;
+pub mod func_consts;
 
 pub use call_as_func::CallAsFuncCollector;
 pub use call_as_proc::CallAsProcCollector;
@@ -20,8 +21,13 @@ pub use get_n_methods::GetNMethodsCollector;
 pub use get_n_params::GetNParamsCollector;
 pub use get_param_def_value::GetParamDefValueCollector;
 pub use has_ret_val::HasReturnValueCollector;
+pub use func_consts::FuncConstantsCollector;
 
 pub trait FunctionCollector<'a>: FromIterator<(usize, &'a FuncDesc)> + Default {
+    fn release(self) -> Result<TokenStream, darling::Error>;
+}
+
+pub trait FunctionCollectorMut<'a>: FromIterator<(usize, &'a mut FuncDesc)> + Default {
     fn release(self) -> Result<TokenStream, darling::Error>;
 }
 

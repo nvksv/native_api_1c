@@ -23,7 +23,6 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetParamDefValueCollector {
         let mut body = TokenStream::new();
 
         for (func_index, func_desc) in iter {
-            let mut func_body = quote! {};
             for (arg_index, arg_desc) in func_desc.get_1c_params().iter().enumerate() {
                 let Some(expr) = &arg_desc.default else {
                     // Skip parameters without default value
@@ -36,18 +35,12 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetParamDefValueCollector {
                 };
 
                 let expr = expr_to_os_value(expr, ty, true);
-                func_body.extend(quote! {
-                    if param_num == #arg_index  {
-                        return Some(#expr);
-                    }
+                body.extend(quote! {
+                    (#func_index, #arg_index) => {
+                        Some(#expr)
+                    },
                 })
             }
-            body.extend(quote! {
-                if method_num == #func_index {
-                    #func_body
-                    return None;
-                };
-            });
         }
 
         let definition = quote! {
@@ -56,8 +49,12 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetParamDefValueCollector {
                 method_num: usize,
                 param_num: usize,
             ) -> Option<native_api_1c::native_api_1c_core::interface::ParamValue> {
-                #body
-                None
+                match (method_num, param_num) {
+                    #body
+                    _ => {
+                        None
+                    }
+                }
             }
         };
 

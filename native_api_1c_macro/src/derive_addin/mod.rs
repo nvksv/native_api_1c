@@ -1,6 +1,6 @@
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{parse_macro_input, DeriveInput, Ident};
 
 use functions::{collectors::*, parse::parse_functions};
 use props::{collectors::*, parse::parse_props};
@@ -57,6 +57,8 @@ fn get_addin_name_from_attribute( input: &DeriveInput ) -> Result<Option<TokenSt
     Ok(None)
 }
 
+// fn generate_addin_const
+
 fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, darling::Error> {
     let struct_ident = &input.ident;
     let syn::Data::Struct(struct_data) = &input.data else {
@@ -65,14 +67,25 @@ fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, dar
             &struct_ident.span()
         );
     };
-    let mut add_in_name_literal = str_literal_token(&struct_ident.to_string(), struct_ident)?;
+    let mut addin_name_literal = str_literal_token(&struct_ident.to_string(), struct_ident)?;
 
-    if let Some(add_in_name) = get_addin_name_from_attribute(input)? {
-        add_in_name_literal = add_in_name;
+    if let Some(addin_name) = get_addin_name_from_attribute(input)? {
+        addin_name_literal = addin_name;
     }
 
-    let props = parse_props(struct_data)?;
-    let functions = parse_functions(struct_data)?;
+    let mut props = parse_props(struct_data)?;
+    let mut functions = parse_functions(struct_data)?;
+
+    let addin_name_const = Ident::new("ADDIN_NAME", Span::call_site());
+    let addin_consts = quote! {
+        const #addin_name_const: &'static native_api_1c::native_api_1c_core::widestring::U16CStr = const { native_api_1c::native_api_1c_core::widestring::u16cstr!(#addin_name_literal) };
+    };
+
+    let pi = props.iter_mut().enumerate();
+    let prop_consts = pi.collect::<PropConstantsCollector>().release()?;
+
+    let pi = functions.iter_mut().enumerate();
+    let func_consts = pi.collect::<FuncConstantsCollector>().release()?;
 
     let pi = props.iter().enumerate();
     let prop_definitions = [
@@ -100,6 +113,12 @@ fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, dar
     ];
 
     let result = quote! {
+        impl #struct_ident {
+            #addin_consts
+            #prop_consts
+            #func_consts
+        }
+
         impl native_api_1c::native_api_1c_core::interface::AddInWrapper for #struct_ident {
             fn init(&mut self, interface: &'static native_api_1c::native_api_1c_core::ffi::connection::Connection) -> bool {
                 self.connection = std::sync::Arc::new(Some(interface));
@@ -109,9 +128,11 @@ fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, dar
             fn get_info(&self) -> u16 {
                 2000
             }
+
             fn done(&mut self) {}
+            
             fn register_extension_as(&mut self) -> &native_api_1c::native_api_1c_core::widestring::U16CStr {
-                native_api_1c::native_api_1c_core::widestring::u16cstr!(#add_in_name_literal)
+                Self::#addin_name_const
             }
 
             #(#prop_definitions)*

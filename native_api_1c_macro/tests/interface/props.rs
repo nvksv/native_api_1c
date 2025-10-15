@@ -61,7 +61,7 @@ fn test_get_n_props(add_in: TestAddIn) {
 #[case(W_PROP_NAME_RU, Some(2))]
 #[case(INVALID_PROP_NAME, None)]
 fn test_find_prop(add_in: TestAddIn, #[case] prop_name: &str, #[case] prop_index: Option<usize>) {
-    assert_eq!(add_in.find_prop(U16CString::from_str_truncate(prop_name).as_slice()), prop_index);
+    assert_eq!(add_in.find_prop(&U16CString::from_str_truncate(prop_name)), prop_index);
 }
 
 #[rstest]
@@ -81,7 +81,7 @@ fn test_get_prop_name(
     #[case] name: Option<&str>,
 ) {
     let prop_name = add_in.get_prop_name(prop_index, name_index);
-    assert_eq!(prop_name, name.map(|s| U16CString::from_str_truncate(s).into_vec_with_nul()));
+    assert_eq!(prop_name.map(|s| s.to_ucstring()), name.map(|s| U16CString::from_str_truncate(s)));
 }
 
 #[rstest]

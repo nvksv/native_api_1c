@@ -24,14 +24,20 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetNParamsCollector {
         for (func_index, func_desc) in iter {
             let number_of_params = func_desc.get_1c_params().len();
             body.extend(quote! {
-                if num == #func_index { return #number_of_params };
+                #func_index => { 
+                    #number_of_params
+                },
             });
         }
 
         let definition = quote! {
             fn get_n_params(&self, num: usize) -> usize {
-                #body
-                0
+                match num {
+                    #body
+                    _ => {
+                        0
+                    }
+                }
             }
         };
 

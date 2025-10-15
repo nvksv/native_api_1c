@@ -22,19 +22,27 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for GetPropNameCollector {
         let mut get_prop_name_body = TokenStream::new();
 
         for (prop_index, prop_desc) in iter {
-            let name_literal = prop_desc.name_literal.clone();
-            let name_ru_literal = prop_desc.name_ru_literal.clone();
+            let name_const = &prop_desc.name_const;
+            let name_ru_const = &prop_desc.name_ru_const;
 
             get_prop_name_body.extend(quote! {
-                if num == #prop_index && alias == 0 { return Some(native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil(#name_literal).into()) };
-                if num == #prop_index { return Some(native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil(#name_ru_literal).into()) };
+                (#prop_index, 0) => { 
+                    Some(Self::#name_const) 
+                },
+                (#prop_index, _) => {
+                    Some(Self::#name_ru_const) 
+                },
             });
         }
 
         let _definition = quote! {
             fn get_prop_name(&self, num: usize, alias: usize) -> Option<&native_api_1c::native_api_1c_core::widestring::U16CStr> {
-                #get_prop_name_body
-                None
+                match (num, alias) {
+                    #get_prop_name_body
+                    _ => {
+                        None
+                    }
+                }
             }
         };
 

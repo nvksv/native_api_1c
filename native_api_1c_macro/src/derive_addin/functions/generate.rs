@@ -54,10 +54,8 @@ pub fn func_call_tkn(func: &FuncDesc, set_to: Option<&Ident>) -> TokenStream {
         let return_ty = func.return_value.ty.clone().unwrap();
         let result_wrap = expr_to_os_value(&quote! { call_result }, &return_ty, true);
         func_call.extend(quote! {
-            let #set_to
+            let #set_to = #result_wrap;
         });
-        func_call.extend(quote! { = });
-        func_call.extend(quote! {#result_wrap;});
     }
 
     quote! {
@@ -76,7 +74,7 @@ fn gen_param_prep(
         panic!("SelfType is not allowed here");
     };
 
-    let param_unwrap = expr_from_os_value(&quote! { params[#param_index]}, param_ty);
+    let param_unwrap = expr_from_os_value(&quote! { params[#param_index] }, param_ty);
     let mut pre_call = quote! {;
         let #param_ident = #param_unwrap;
         let mut #param_ident = #param_ident.clone().into();
@@ -91,12 +89,9 @@ fn gen_param_prep(
         quote! {}
     } else {
         let param_wrap = expr_to_os_value(&param_ident.to_token_stream(), param_ty, false);
-        let mut q = quote! {
-            params[#param_index]
-        };
-        q.extend(quote! { = });
-        q.extend(quote! { #param_wrap; });
-        q
+        quote! {
+            params[#param_index] = #param_wrap;
+        }
     };
 
     (pre_call, post_call)

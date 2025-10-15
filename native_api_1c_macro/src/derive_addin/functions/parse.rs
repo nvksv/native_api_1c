@@ -108,6 +108,11 @@ impl FromField for FuncDesc {
             name_literal: func_meta.name.into(),
             name_ru_literal: func_meta.name_ru.into(),
 
+            name_const: TokenStream::new(),
+            name_ru_const: TokenStream::new(),
+            name_slice_const: TokenStream::new(),
+            name_ru_slice_const: TokenStream::new(),
+
             params,
             return_value,
         })

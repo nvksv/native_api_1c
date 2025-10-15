@@ -25,14 +25,20 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for IsPropReadableCollector {
             let readable = prop_desc.readable;
 
             is_prop_readable_body.extend(quote! {
-                if num == #prop_index { return #readable };
+                #prop_index => { 
+                    #readable
+                },
             });
         }
 
         let _definition = quote! {
             fn is_prop_readable(&self, num: usize) -> bool {
-                #is_prop_readable_body
-                false
+                match num {
+                    #is_prop_readable_body
+                    _ => {
+                        false
+                    }
+                }
             }
         };
 

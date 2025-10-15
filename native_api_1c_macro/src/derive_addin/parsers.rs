@@ -3,20 +3,13 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 
 use super::constants::{BLOB_TYPE, BOOL_TYPE, DATE_TYPE, F64_TYPE, I32_TYPE, STRING_TYPE};
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum ParamType {
-    Bool,
-    I32,
-    F64,
-    String,
-    Date,
-    Blob,
-}
+use native_api_1c_core::interface::ParamType;
 
 const META_TYPE_ERR: &str = "expected string literal or path";
 
-impl FromMeta for ParamType {
+struct ParamTypeWrapper(pub ParamType);
+
+impl FromMeta for ParamTypeWrapper {
     fn from_expr(expr: &syn::Expr) -> darling::Result<Self> {
         let meta_type_err = darling::Error::custom(META_TYPE_ERR);
         let expr_string = match expr {
@@ -31,8 +24,8 @@ impl FromMeta for ParamType {
     }
 
     fn from_string(value: &str) -> darling::Result<Self> {
-        let joined_allowed_types = crate::derive_addin::constants::ALL_ARG_TYPES.join(", ");
         Self::try_from(value).map_err(|_| {
+            let joined_allowed_types = crate::derive_addin::constants::ALL_ARG_TYPES.join(", ");
             darling::Error::custom(format!(
                 "unknown type `{value}`. Must be one of: {joined_allowed_types}",
             ))
@@ -40,43 +33,18 @@ impl FromMeta for ParamType {
     }
 }
 
-impl TryFrom<&str> for ParamType {
+impl TryFrom<&str> for ParamTypeWrapper {
     type Error = ();
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            BOOL_TYPE => Ok(ParamType::Bool),
-            I32_TYPE => Ok(ParamType::I32),
-            F64_TYPE => Ok(ParamType::F64),
-            STRING_TYPE => Ok(ParamType::String),
-            DATE_TYPE => Ok(ParamType::Date),
-            BLOB_TYPE => Ok(ParamType::Blob),
+            BOOL_TYPE => Ok(ParamTypeWrapper(ParamType::Bool)),
+            I32_TYPE => Ok(ParamTypeWrapper(ParamType::I32)),
+            F64_TYPE => Ok(ParamTypeWrapper(ParamType::F64)),
+            STRING_TYPE => Ok(ParamTypeWrapper(ParamType::String)),
+            DATE_TYPE => Ok(ParamTypeWrapper(ParamType::Date)),
+            BLOB_TYPE => Ok(ParamTypeWrapper(ParamType::Blob)),
             _ => Err(()),
-        }
-    }
-}
-
-impl ToTokens for ParamType {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        *tokens = match self {
-            ParamType::Bool => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Bool }
-            }
-            ParamType::I32 => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::I32 }
-            }
-            ParamType::F64 => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::F64 }
-            }
-            ParamType::Date => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Date }
-            }
-            ParamType::String => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::String }
-            }
-            ParamType::Blob => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Blob }
-            }
         }
     }
 }

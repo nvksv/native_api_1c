@@ -24,14 +24,20 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for HasReturnValueCollector {
         for (func_index, func_desc) in iter {
             let has_ret_val = func_desc.return_value.ty.is_some();
             body.extend(quote! {
-                if method_num == #func_index { return #has_ret_val };
+                #func_index => { 
+                    #has_ret_val 
+                },
             });
         }
 
         let definition = quote! {
             fn has_ret_val(&self, method_num: usize) -> bool {
-                #body
-                false
+                match method_num {
+                    #body
+                    _ => {
+                        false
+                    }
+                }
             }
         };
 

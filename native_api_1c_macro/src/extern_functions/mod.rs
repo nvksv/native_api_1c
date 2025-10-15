@@ -2,10 +2,9 @@ mod parse;
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use native_api_1c_core::widestring;
+use syn::{LitByte, LitStr, Ident};
 
 use parse::ExternAddInsDesc;
-use syn::{LitByte, LitStr};
 
 static ASCII_LOWER: [char; 50] = [
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', // numbers
@@ -53,7 +52,11 @@ pub fn extern_functions(input: proc_macro::TokenStream) -> proc_macro::TokenStre
         .join("|");
     let names_lit = LitStr::new(&names, Span::call_site());
     let names_lit = names_lit.to_token_stream();
-    let get_class_names_body = quote! { native_api_1c::native_api_1c_core::widestring::u16cstr!(#names_lit).as_ptr() };
+
+    let class_names_const = Ident::new("CLASS_NAMES", Span::call_site());
+    let class_consts = quote! {
+        const #class_names_const: &'static native_api_1c::native_api_1c_core::widestring::U16CStr = const { native_api_1c::native_api_1c_core::widestring::u16cstr!(#names_lit) };
+    };
 
     let result = quote! {
         pub static mut PLATFORM_CAPABILITIES: std::sync::atomic::AtomicI32 =
@@ -83,7 +86,8 @@ pub fn extern_functions(input: proc_macro::TokenStream) -> proc_macro::TokenStre
         #[allow(non_snake_case)]
         #[no_mangle]
         pub extern "C" fn GetClassNames() -> *const u16 {
-            #get_class_names_body
+            #class_consts
+            #class_names_const.as_ptr()
         }
     };
 

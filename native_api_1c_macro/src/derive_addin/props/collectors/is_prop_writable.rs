@@ -24,14 +24,20 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for IsPropWritableCollector {
         for (prop_index, prop_desc) in iter {
             let writable = prop_desc.writable;
             is_prop_writable_body.extend(quote! {
-                if num == #prop_index { return #writable };
+                #prop_index => {
+                    #writable
+                },
             });
         }
 
         let _definition = quote! {
             fn is_prop_writable(&self, num: usize) -> bool {
-                #is_prop_writable_body
-                false
+                match num {
+                    #is_prop_writable_body
+                    _ => {
+                        false
+                    }
+                }
             }
         };
 

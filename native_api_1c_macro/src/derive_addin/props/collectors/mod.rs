@@ -10,6 +10,7 @@ pub mod get_prop_val;
 pub mod is_prop_readable;
 pub mod is_prop_writable;
 pub mod set_prop_val;
+pub mod prop_consts;
 
 pub use find_prop::FindPropCollector;
 pub use get_n_props::GetNPropsCollector;
@@ -18,8 +19,13 @@ pub use get_prop_val::GetPropValCollector;
 pub use is_prop_readable::IsPropReadableCollector;
 pub use is_prop_writable::IsPropWritableCollector;
 pub use set_prop_val::SetPropValCollector;
+pub use prop_consts::PropConstantsCollector;
 
 pub trait PropCollector<'a>: FromIterator<(usize, &'a PropDesc)> + Default {
+    fn release(self) -> Result<TokenStream, darling::Error>;
+}
+
+pub trait PropCollectorMut<'a>: FromIterator<(usize, &'a mut PropDesc)> + Default {
     fn release(self) -> Result<TokenStream, darling::Error>;
 }
 

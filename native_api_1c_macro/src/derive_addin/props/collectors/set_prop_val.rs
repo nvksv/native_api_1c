@@ -30,10 +30,10 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for SetPropValCollector {
             let prop_getter = expr_from_os_value(&quote! { val }, &prop_desc.ty);
 
             body.extend(quote! {
-                if num == #prop_index {
+                #prop_index => {
                     self.#prop_ident = #prop_getter.into();
-                    return Ok(());
-                };
+                    Ok(())
+                },
             });
         }
 
@@ -43,8 +43,12 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for SetPropValCollector {
                 num: usize,
                 val: native_api_1c::native_api_1c_core::interface::ParamValue,
             ) -> native_api_1c::native_api_1c_core::interface::AddInWrapperResult<()> {
-                #body
-                return Err(())
+                match num {
+                    #body
+                    _ => {
+                        Err(())
+                    }
+                }
             }
         };
 

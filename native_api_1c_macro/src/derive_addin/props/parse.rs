@@ -1,5 +1,5 @@
 use darling::{FromField, FromMeta};
-
+use proc_macro2::{Span, TokenStream};
 use syn::{Attribute, DataStruct};
 
 use crate::derive_addin::{parsers::PropName, utils::ident_option_to_darling_err};
@@ -35,6 +35,11 @@ impl FromField for PropDesc {
 
             name_literal: prop_meta.name.into(),
             name_ru_literal: prop_meta.name_ru.into(),
+
+            name_const: TokenStream::new(),
+            name_ru_const: TokenStream::new(),
+            name_slice_const: TokenStream::new(),
+            name_ru_slice_const: TokenStream::new(),
 
             readable: prop_meta.readable.is_some(),
             writable: prop_meta.writable.is_some(),

@@ -22,23 +22,24 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for FindMethodCollector {
         let mut find_method_body = TokenStream::new();
 
         for (func_index, func_desc) in iter {
-            let name_literal = func_desc.name_literal.clone();
-            let name_ru_literal = func_desc.name_ru_literal.clone();
+            let name_slice_const = &func_desc.name_slice_const;
+            let name_ru_slice_const = &func_desc.name_ru_slice_const;
 
             find_method_body.extend(quote! {
-                if native_api_1c::native_api_1c_core::widestring::u16cstr!(#name_literal) == name { 
-                    return Some(#func_index) 
-                };
-                if native_api_1c::native_api_1c_core::widestring::u16cstr!(#name_ru_literal) == name { 
-                    return Some(#func_index) 
-                };
+                Self::#name_slice_const | Self::#name_ru_slice_const => { 
+                    Some(#func_index)
+                },
             });
         }
 
         let find_method_definition = quote! {
             fn find_method(&self, name: &native_api_1c::native_api_1c_core::widestring::U16CStr) -> Option<usize> {
-                #find_method_body
-                None
+                match name.as_slice_with_nul() {
+                    #find_method_body
+                    _ => {
+                        None
+                    }
+                }
             }
         };
 

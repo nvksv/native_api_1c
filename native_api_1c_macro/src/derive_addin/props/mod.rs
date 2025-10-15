@@ -13,6 +13,11 @@ pub struct PropDesc {
     pub name_literal: TokenStream,
     pub name_ru_literal: TokenStream,
 
+    pub name_const: TokenStream,
+    pub name_ru_const: TokenStream,
+    pub name_slice_const: TokenStream,
+    pub name_ru_slice_const: TokenStream,
+
     pub readable: bool,
     pub writable: bool,
     pub ty: ParamType,

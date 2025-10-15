@@ -23,10 +23,10 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for CallAsProcCollector {
         for (func_index, func_desc) in iter {
             let call_func = func_call_tkn(func_desc, None);
             body.extend(quote! {
-                if method_num == #func_index {
+                #func_index => {
                     #call_func
-                    return Ok(());
-                };
+                    Ok(())
+                },
             });
         }
 
@@ -36,8 +36,12 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for CallAsProcCollector {
                 method_num: usize,
                 params: &mut native_api_1c::native_api_1c_core::interface::ParamValues,
             ) -> native_api_1c::native_api_1c_core::interface::AddInWrapperResult<()> {
-                #body
-                Err(())
+                match method_num {
+                    #body
+                    _ => {
+                        Err(())
+                    }
+                }
             }
         };
 

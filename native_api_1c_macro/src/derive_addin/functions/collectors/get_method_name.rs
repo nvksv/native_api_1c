@@ -22,27 +22,27 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetMethodNameCollector {
         let mut get_func_name_body = TokenStream::new();
 
         for (func_index, func_desc) in iter {
-            let name_literal = func_desc.name_literal.clone();
-            let name_ru_literal = func_desc.name_ru_literal.clone();
+            let name_const = &func_desc.name_const;
+            let name_ru_const = &func_desc.name_ru_const;
 
             get_func_name_body.extend(quote! {
-                if num == #func_index && alias == 0 {
-                    return Some(native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil(
-                        #name_literal).into()
-                    )
-                };
-                if num == #func_index {
-                    return Some(native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil(
-                        #name_ru_literal).into()
-                    )
-                };
+                (#func_index, 0) => {
+                    Some(Self::#name_const)
+                },
+                (#func_index, _) => {
+                    Some(Self::#name_ru_const)
+                },
             });
         }
 
         let get_func_name_definition = quote! {
             fn get_method_name(&self, num: usize, alias: usize) -> Option<&native_api_1c::native_api_1c_core::widestring::U16CStr> {
-                #get_func_name_body
-                None
+                match (num, alias) {
+                    #get_func_name_body
+                    _ => {
+                        None
+                    }
+                }
             }
         };
 

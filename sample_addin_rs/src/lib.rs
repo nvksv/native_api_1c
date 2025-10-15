@@ -5,6 +5,7 @@ use native_api_1c::{
     native_api_1c_macro::{extern_functions, AddIn},
 };
 
+
 #[derive(AddIn)]
 #[add_in(name = "Имя")]
 pub struct SampleAddIn {

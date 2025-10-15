@@ -22,23 +22,24 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for FindPropCollector {
         let mut find_prop_body = TokenStream::new();
 
         for (prop_index, prop_desc) in iter {
-            let name_literal = prop_desc.name_literal.clone();
-            let name_ru_literal = prop_desc.name_ru_literal.clone();
+            let name_slice_const = &prop_desc.name_slice_const;
+            let name_ru_slice_const = &prop_desc.name_ru_slice_const;
 
             find_prop_body.extend(quote! {
-                if native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil(#name_literal) == name { 
-                    return Some(#prop_index) 
-                };
-                if native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil(#name_ru_literal) == name { 
-                    return Some(#prop_index) 
-                };
+                Self::#name_slice_const | Self::#name_ru_slice_const => { 
+                    Some(#prop_index) 
+                },
             });
         }
 
         let _definition = quote! {
             fn find_prop(&self, name: &native_api_1c::native_api_1c_core::widestring::U16CStr) -> Option<usize> {
-                #find_prop_body
-                None
+                match name.as_slice_with_nul() {
+                    #find_prop_body
+                    _ => {
+                        None
+                    }
+                }
             }
         };
 

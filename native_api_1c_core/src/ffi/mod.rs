@@ -28,8 +28,6 @@ pub mod locale_base;
 pub mod memory_manager;
 /// Implementations of types, provided by Native API for easy of use in Rust
 pub mod provided_types;
-// /// Functions to convert between Rust and 1C strings
-// pub mod string_utils;
 /// Implementation of `UserLanguageBase`
 pub mod user_lang_base;
 
