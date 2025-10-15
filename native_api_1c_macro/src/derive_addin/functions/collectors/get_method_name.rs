@@ -40,7 +40,7 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetMethodNameCollector {
         }
 
         let get_func_name_definition = quote! {
-            fn get_method_name(&self, num: usize, alias: usize) -> Option<Vec<u16>> {
+            fn get_method_name(&self, num: usize, alias: usize) -> Option<&native_api_1c::native_api_1c_core::widestring::U16CStr> {
                 #get_func_name_body
                 None
             }

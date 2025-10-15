@@ -1,4 +1,6 @@
-use super::{get_str, offset, provided_types::TVariant};
+use widestring::U16CStr;
+
+use super::{offset, provided_types::TVariant};
 use crate::interface::{AddInWrapper, ParamValue, ParamValues};
 use std::{
     ffi::c_long,
@@ -56,7 +58,7 @@ unsafe extern "system" fn register_extension_as<T: AddInWrapper>(
     this: &mut This<T>,
     name: *mut *mut u16,
 ) -> bool {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     let Some(allocator) = component.memory_manager_ptr else {
         return false;
     };
@@ -66,12 +68,14 @@ unsafe extern "system" fn register_extension_as<T: AddInWrapper>(
     let Ok(ptr) = allocator.alloc_str(extension_name.len()) else {
         return false;
     };
-    ptr::copy_nonoverlapping(
-        extension_name.as_ptr(),
-        ptr.as_ptr(),
-        extension_name.len(),
-    );
-    *name = ptr.as_ptr();
+    unsafe { 
+        ptr::copy_nonoverlapping(
+            extension_name.as_ptr(),
+            ptr.as_ptr(),
+            extension_name.len(),
+        );
+        *name = ptr.as_ptr();
+    }
 
     true
 }
@@ -79,7 +83,7 @@ unsafe extern "system" fn register_extension_as<T: AddInWrapper>(
 unsafe extern "system" fn get_n_props<T: AddInWrapper>(
     this: &mut This<T>,
 ) -> c_long {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     component.addin.get_n_props() as c_long
 }
 
@@ -87,8 +91,8 @@ unsafe extern "system" fn find_prop<T: AddInWrapper>(
     this: &mut This<T>,
     name: *const u16,
 ) -> c_long {
-    let component = this.get_component();
-    let name = get_str(name);
+    let component = unsafe { this.get_component() };
+    let name = unsafe { U16CStr::from_ptr_str(name) };
     match component.addin.find_prop(name) {
         Some(i) => i as c_long,
         None => -1,
@@ -100,7 +104,7 @@ unsafe extern "system" fn get_prop_name<T: AddInWrapper>(
     num: c_long,
     alias: c_long,
 ) -> *const u16 {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     let Some(allocator) = component.memory_manager_ptr else {
         return ptr::null();
     };
@@ -112,7 +116,9 @@ unsafe extern "system" fn get_prop_name<T: AddInWrapper>(
     let Ok(ptr) = allocator.alloc_str(prop_name.len()) else {
         return ptr::null();
     };
-    ptr::copy_nonoverlapping(prop_name.as_ptr(), ptr.as_ptr(), prop_name.len());
+    unsafe {
+        ptr::copy_nonoverlapping(prop_name.as_ptr(), ptr.as_ptr(), prop_name.len());
+    }
 
     ptr.as_ptr()
 }
@@ -122,7 +128,7 @@ unsafe extern "system" fn get_prop_val<T: AddInWrapper>(
     num: c_long,
     val: &mut TVariant,
 ) -> bool {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     let Some(mem_mngr) = component.memory_manager_ptr else {
         return false;
     };
@@ -142,7 +148,7 @@ unsafe extern "system" fn set_prop_val<T: AddInWrapper>(
     num: c_long,
     val: &TVariant,
 ) -> bool {
-    this.get_component()
+    unsafe { this.get_component() }
         .addin
         .set_prop_val(num as usize, val.into())
         .is_ok()
@@ -152,21 +158,22 @@ unsafe extern "system" fn is_prop_readable<T: AddInWrapper>(
     this: &mut This<T>,
     num: c_long,
 ) -> bool {
-    this.get_component().addin.is_prop_readable(num as usize)
+    unsafe { this.get_component() }
+        .addin.is_prop_readable(num as usize)
 }
 
 unsafe extern "system" fn is_prop_writable<T: AddInWrapper>(
     this: &mut This<T>,
     num: c_long,
 ) -> bool {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     component.addin.is_prop_writable(num as usize)
 }
 
 unsafe extern "system" fn get_n_methods<T: AddInWrapper>(
     this: &mut This<T>,
 ) -> c_long {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     component.addin.get_n_methods() as c_long
 }
 
@@ -174,8 +181,8 @@ unsafe extern "system" fn find_method<T: AddInWrapper>(
     this: &mut This<T>,
     name: *const u16,
 ) -> c_long {
-    let component = this.get_component();
-    let name = get_str(name);
+    let component = unsafe { this.get_component() };
+    let name = unsafe { U16CStr::from_ptr_str(name) };
     match component.addin.find_method(name) {
         Some(i) => i as c_long,
         None => -1,
@@ -187,7 +194,7 @@ unsafe extern "system" fn get_method_name<T: AddInWrapper>(
     num: c_long,
     alias: c_long,
 ) -> *const u16 {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     let Some(allocator) = component.memory_manager_ptr else {
         return ptr::null();
     };
@@ -201,11 +208,13 @@ unsafe extern "system" fn get_method_name<T: AddInWrapper>(
         return ptr::null();
     };
 
-    ptr::copy_nonoverlapping(
-        method_name.as_ptr(),
-        ptr.as_ptr(),
-        method_name.len(),
-    );
+    unsafe {
+        ptr::copy_nonoverlapping(
+            method_name.as_ptr(),
+            ptr.as_ptr(),
+            method_name.len(),
+        );
+    }
 
     ptr.as_ptr()
 }
@@ -214,7 +223,7 @@ unsafe extern "system" fn get_n_params<T: AddInWrapper>(
     this: &mut This<T>,
     num: c_long,
 ) -> c_long {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     component.addin.get_n_params(num as usize) as c_long
 }
 
@@ -224,7 +233,7 @@ unsafe extern "system" fn get_param_def_value<T: AddInWrapper>(
     param_num: c_long,
     val: &mut TVariant,
 ) -> bool {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     let Some(mem) = component.memory_manager_ptr else {
         return false;
     };
@@ -245,7 +254,7 @@ unsafe extern "system" fn has_ret_val<T: AddInWrapper>(
     this: &mut This<T>,
     method_num: c_long,
 ) -> bool {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     component.addin.has_ret_val(method_num as usize)
 }
 
@@ -255,7 +264,7 @@ unsafe extern "system" fn call_as_proc<T: AddInWrapper>(
     params: *mut TVariant,
     size_array: c_long,
 ) -> bool {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     let Some(mem_mngr) = component.memory_manager_ptr else {
         return false;
     };
@@ -263,7 +272,7 @@ unsafe extern "system" fn call_as_proc<T: AddInWrapper>(
     let parameters_raw = if params.is_null() && size_array == 0 { 
         &mut [] 
     } else {
-        from_raw_parts_mut(params, size_array as usize)
+        unsafe { from_raw_parts_mut(params, size_array as usize) }
     };
     
     let mut parameters_values =
@@ -291,7 +300,7 @@ unsafe extern "system" fn call_as_func<T: AddInWrapper>(
     params: *mut TVariant,
     size_array: c_long,
 ) -> bool {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     let Some(mem_mngr) = component.memory_manager_ptr else {
         return false;
     };
@@ -299,7 +308,7 @@ unsafe extern "system" fn call_as_func<T: AddInWrapper>(
     let parameters_raw = if params.is_null() && size_array == 0 { 
         &mut [] 
     } else {
-        from_raw_parts_mut(params, size_array as usize)
+        unsafe { from_raw_parts_mut(params, size_array as usize) }
     };
 
     let mut parameters_values =

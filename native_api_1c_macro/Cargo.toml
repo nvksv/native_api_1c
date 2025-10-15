@@ -26,10 +26,10 @@ syn = { version = "2.0.38", features = ["default", "printing"] }
 quote = "1.0.32"
 proc-macro2 = "1.0.66"
 darling = "0.20.3"
+native_api_1c_core = { path = "../native_api_1c_core" }
 
 [dev-dependencies]
 native_api_1c = { path = "../native_api_1c" }
 trybuild = { version = "1.0.49", features = ["diff"] }
-utf16_lit = "2.0"
 chrono = "0.4.26"
 rstest = "0.21.0"

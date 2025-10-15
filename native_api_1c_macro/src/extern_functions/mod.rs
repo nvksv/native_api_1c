@@ -2,6 +2,7 @@ mod parse;
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
+use native_api_1c_core::widestring;
 
 use parse::ExternAddInsDesc;
 use syn::{LitByte, LitStr};
@@ -52,7 +53,7 @@ pub fn extern_functions(input: proc_macro::TokenStream) -> proc_macro::TokenStre
         .join("|");
     let names_lit = LitStr::new(&names, Span::call_site());
     let names_lit = names_lit.to_token_stream();
-    let get_class_names_body = quote! { utf16_lit::utf16_null!(#names_lit).as_ptr() };
+    let get_class_names_body = quote! { native_api_1c::native_api_1c_core::widestring::u16cstr!(#names_lit).as_ptr() };
 
     let result = quote! {
         pub static mut PLATFORM_CAPABILITIES: std::sync::atomic::AtomicI32 =

@@ -11,3 +11,6 @@
 pub mod ffi;
 /// Module for high level interface of Native API
 pub mod interface;
+
+/// Reexport widestring crate
+pub use widestring;

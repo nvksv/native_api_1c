@@ -1,6 +1,6 @@
 use crate::interface::AddInWrapper;
 
-use super::string_utils::get_str;
+use widestring::U16CStr;
 
 type This<T> = super::This<{ super::offset::LOCALE }, T>;
 
@@ -27,7 +27,7 @@ unsafe extern "system" fn set_locale<T: AddInWrapper>(
     this: &mut This<T>,
     loc: *const u16,
 ) {
-    let component = this.get_component();
-    let loc = get_str(loc);
+    let component = unsafe { this.get_component() };
+    let loc = unsafe { U16CStr::from_ptr_str(loc) };
     component.addin.set_locale(loc)
 }

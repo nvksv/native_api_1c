@@ -110,16 +110,16 @@ fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, dar
                 2000
             }
             fn done(&mut self) {}
-            fn register_extension_as(&mut self) -> &[u16] {
-                &utf16_lit::utf16_null!(#add_in_name_literal)
+            fn register_extension_as(&mut self) -> &native_api_1c::native_api_1c_core::widestring::U16CStr {
+                native_api_1c::native_api_1c_core::widestring::u16cstr!(#add_in_name_literal)
             }
 
             #(#prop_definitions)*
             #(#func_definitions)*
 
-            fn set_locale(&mut self, loc: &[u16]) {
+            fn set_locale(&mut self, loc: &native_api_1c::native_api_1c_core::widestring::U16CStr) {
             }
-            fn set_user_interface_language_code(&mut self, lang: &[u16]) {
+            fn set_user_interface_language_code(&mut self, lang: &native_api_1c::native_api_1c_core::widestring::U16CStr) {
             }
         }
     };

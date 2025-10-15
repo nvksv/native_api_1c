@@ -3,9 +3,9 @@ use std::sync::Arc;
 use native_api_1c::native_api_1c_core::{
     ffi::{
         connection::Connection,
-        string_utils::{os_string, os_string_nil},
     },
     interface::{AddInWrapper, ParamValue, ParamValues},
+    widestring::U16CString,
 };
 use native_api_1c_macro::AddIn;
 use rstest::{fixture, rstest};
@@ -76,9 +76,7 @@ fn test_get_n_methods(add_in: TestAddIn) {
 #[case(OUT_FUNCTION_NAME_RU, Some(2))]
 #[case(INVALID_NAME, None)]
 fn test_find_method(add_in: TestAddIn, #[case] name: &str, #[case] expected: Option<usize>) {
-    use native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil;
-
-    assert_eq!(add_in.find_method(&os_string_nil(name)), expected);
+    assert_eq!(add_in.find_method(U16CString::from_str_truncate(name).as_slice()), expected);
 }
 
 #[rstest]
@@ -98,11 +96,9 @@ fn test_get_method_name(
     #[case] alias_i: usize,
     #[case] expected: Option<&str>,
 ) {
-    use native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil;
-
     assert_eq!(
         add_in.get_method_name(method_i, alias_i),
-        expected.map(os_string_nil)
+        expected.map(|s| U16CString::from_str_truncate(s).into_vec_with_nul())
     );
 }
 
@@ -122,7 +118,7 @@ fn test_get_n_params(add_in: TestAddIn, #[case] method_i: usize, #[case] n_param
 #[case(1, 0, None)]
 #[case(1, 1, Some(ParamValue::I32(DEFAULT_VALUE)))]
 #[case(1, 42, None)]
-#[case(2, 0, Some(ParamValue::String(os_string_nil(OUT_STR))))]
+#[case(2, 0, Some(ParamValue::String(U16CString::from_str_truncate(OUT_STR).into_vec_with_nul())))]
 #[case(2, 42, None)]
 #[case(3, 0, None)]
 fn test_get_param_def_value(
@@ -173,7 +169,7 @@ fn test_call_procedure(mut add_in: TestAddIn) {
 
 #[rstest]
 fn test_call_out_function(mut add_in: TestAddIn) {
-    let out_str = os_string("1C");
+    let out_str = U16CString::from_str_truncate("1C").into_vec_with_nul();
     let mut params = ParamValues::new(vec![ParamValue::String(out_str)]);
 
     let result = add_in.call_as_func(2, &mut params);
@@ -181,5 +177,5 @@ fn test_call_out_function(mut add_in: TestAddIn) {
 
     let result = add_in.call_as_proc(2, &mut params);
     assert!(result.is_ok());
-    assert_eq!(params[0], ParamValue::String(os_string("Hello, 1C!")));
+    assert_eq!(params[0], ParamValue::String(U16CString::from_str_truncate("Hello, 1C!").into_vec_with_nul()));
 }

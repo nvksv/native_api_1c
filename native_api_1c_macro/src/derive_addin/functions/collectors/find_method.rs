@@ -26,17 +26,17 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for FindMethodCollector {
             let name_ru_literal = func_desc.name_ru_literal.clone();
 
             find_method_body.extend(quote! {
-                if native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil(#name_literal) == name { 
+                if native_api_1c::native_api_1c_core::widestring::u16cstr!(#name_literal) == name { 
                     return Some(#func_index) 
                 };
-                if native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil(#name_ru_literal) == name { 
+                if native_api_1c::native_api_1c_core::widestring::u16cstr!(#name_ru_literal) == name { 
                     return Some(#func_index) 
                 };
             });
         }
 
         let find_method_definition = quote! {
-            fn find_method(&self, name: &[u16]) -> Option<usize> {
+            fn find_method(&self, name: &native_api_1c::native_api_1c_core::widestring::U16CStr) -> Option<usize> {
                 #find_method_body
                 None
             }

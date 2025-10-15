@@ -51,9 +51,9 @@ pub fn expr_to_os_value(
     string_nil: bool,
 ) -> proc_macro2::TokenStream {
     let os_string_fn = if string_nil {
-        quote! {native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil}
+        quote! {native_api_1c::native_api_1c_core::widestring::U16CString::from_str}
     } else {
-        quote! {native_api_1c::native_api_1c_core::ffi::string_utils::os_string}
+        quote! {native_api_1c::native_api_1c_core::widestring::U16String::from_str}
     };
     match ty {
         ParamType::String => quote! {

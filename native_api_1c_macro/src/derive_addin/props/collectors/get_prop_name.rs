@@ -32,7 +32,7 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for GetPropNameCollector {
         }
 
         let _definition = quote! {
-            fn get_prop_name(&self, num: usize, alias: usize) -> Option<Vec<u16>> {
+            fn get_prop_name(&self, num: usize, alias: usize) -> Option<&native_api_1c::native_api_1c_core::widestring::U16CStr> {
                 #get_prop_name_body
                 None
             }

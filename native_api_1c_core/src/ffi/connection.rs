@@ -1,6 +1,8 @@
 use std::ffi::{c_long, c_ushort};
-
-use super::{provided_types::TVariant, string_utils::os_string_nil};
+use widestring::U16CString;
+use super::{
+    provided_types::TVariant
+};
 
 /// Message codes that can be used in `Connection::add_error` method
 /// to specify message type.
@@ -89,8 +91,8 @@ impl Connection {
         description: &str,
     ) -> bool {
         unsafe {
-            let source_wstr = os_string_nil(source);
-            let description_wstr = os_string_nil(description);
+            let source_wstr = U16CString::from_str_truncate(source);
+            let description_wstr = U16CString::from_str_truncate(description);
             (self.vptr1.add_error)(
                 self,
                 code as u16,
@@ -110,9 +112,9 @@ impl Connection {
     /// `bool` - operation success status
     pub fn external_event(&self, caller: &str, name: &str, data: &str) -> bool {
         unsafe {
-            let mut caller_wstr = os_string_nil(caller);
-            let mut name_wstr = os_string_nil(name);
-            let mut data_wstr = os_string_nil(data);
+            let mut caller_wstr = U16CString::from_str_truncate(caller);
+            let mut name_wstr = U16CString::from_str_truncate(name);
+            let mut data_wstr = U16CString::from_str_truncate(data);
             (self.vptr1.external_event)(
                 self,
                 caller_wstr.as_mut_ptr(),

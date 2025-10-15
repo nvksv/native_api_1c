@@ -36,7 +36,7 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for FindPropCollector {
         }
 
         let _definition = quote! {
-            fn find_prop(&self, name: &[u16]) -> Option<usize> {
+            fn find_prop(&self, name: &native_api_1c::native_api_1c_core::widestring::U16CStr) -> Option<usize> {
                 #find_prop_body
                 None
             }

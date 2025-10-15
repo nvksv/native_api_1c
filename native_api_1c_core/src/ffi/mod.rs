@@ -12,7 +12,7 @@ use crate::interface::AddInWrapper;
 use self::{
     connection::Connection, init_done::InitDoneBaseVTable,
     lang_extender::LanguageExtenderBaseVTable, locale_base::LocaleBaseVTable,
-    memory_manager::MemoryManager, string_utils::get_str,
+    memory_manager::MemoryManager,
     user_lang_base::UserLanguageBaseVTable,
 };
 
@@ -28,8 +28,8 @@ pub mod locale_base;
 pub mod memory_manager;
 /// Implementations of types, provided by Native API for easy of use in Rust
 pub mod provided_types;
-/// Functions to convert between Rust and 1C strings
-pub mod string_utils;
+// /// Functions to convert between Rust and 1C strings
+// pub mod string_utils;
 /// Implementation of `UserLanguageBase`
 pub mod user_lang_base;
 
@@ -63,9 +63,11 @@ mod offset {
 
 impl<'a, const OFFSET: usize, T: AddInWrapper> This<OFFSET, T> {
     unsafe fn get_component(&mut self) -> &'a mut Component<T> {
-        let new_ptr = (self as *mut This<OFFSET, T> as *mut c_void)
-            .sub(OFFSET * std::mem::size_of::<usize>());
-        &mut *(new_ptr as *mut Component<T>)
+        let new_ptr = unsafe {
+            (self as *mut This<OFFSET, T> as *mut c_void)
+                .sub(OFFSET * std::mem::size_of::<usize>())
+        };
+        unsafe { &mut *(new_ptr as *mut Component<T>) }
     }
 }
 
@@ -92,7 +94,7 @@ struct Component<T: AddInWrapper> {
 unsafe extern "system" fn destroy<T: AddInWrapper>(
     component: *mut *mut Component<T>,
 ) {
-    let comp = Box::from_raw(*component);
+    let comp = unsafe { Box::from_raw(*component) };
     drop(comp);
 }
 
@@ -119,7 +121,7 @@ pub unsafe fn create_component<T: AddInWrapper>(
         addin,
     });
 
-    *component = Box::into_raw(c) as *mut c_void;
+    unsafe { *component = Box::into_raw(c) as *mut c_void };
     1
 }
 
@@ -135,10 +137,9 @@ pub unsafe fn destroy_component(component: *mut *mut c_void) -> c_long {
         destroy: unsafe extern "system" fn(*mut *mut c_void),
     }
 
-    let wrapper = *component as *mut ComponentWrapper;
-    let wrapper = &mut *wrapper;
-    (wrapper.destroy)(component);
-    *component = ptr::null_mut();
+    let wrapper = unsafe { &mut *(component as *mut ComponentWrapper) };
+    unsafe { (wrapper.destroy)(component) };
+    unsafe { *component = ptr::null_mut() };
 
     0
 }

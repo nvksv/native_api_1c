@@ -3,6 +3,7 @@ use std::sync::Arc;
 use native_api_1c::native_api_1c_core::{
     ffi::connection::Connection,
     interface::{AddInWrapper, ParamValue},
+    widestring::U16CString,
 };
 use native_api_1c_macro::AddIn;
 use rstest::{fixture, rstest};
@@ -60,9 +61,7 @@ fn test_get_n_props(add_in: TestAddIn) {
 #[case(W_PROP_NAME_RU, Some(2))]
 #[case(INVALID_PROP_NAME, None)]
 fn test_find_prop(add_in: TestAddIn, #[case] prop_name: &str, #[case] prop_index: Option<usize>) {
-    use native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil;
-
-    assert_eq!(add_in.find_prop(&os_string_nil(prop_name)), prop_index);
+    assert_eq!(add_in.find_prop(U16CString::from_str_truncate(prop_name).as_slice()), prop_index);
 }
 
 #[rstest]
@@ -81,10 +80,8 @@ fn test_get_prop_name(
     #[case] name_index: usize,
     #[case] name: Option<&str>,
 ) {
-    use native_api_1c::native_api_1c_core::ffi::string_utils::os_string_nil;
-
     let prop_name = add_in.get_prop_name(prop_index, name_index);
-    assert_eq!(prop_name, name.map(os_string_nil));
+    assert_eq!(prop_name, name.map(|s| U16CString::from_str_truncate(s).into_vec_with_nul()));
 }
 
 #[rstest]

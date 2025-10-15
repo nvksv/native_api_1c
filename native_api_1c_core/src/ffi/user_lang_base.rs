@@ -1,6 +1,6 @@
 use crate::interface::AddInWrapper;
 
-use super::string_utils::get_str;
+use widestring::U16CStr;
 
 type This<T> = super::This<{ super::offset::USER_LANG }, T>;
 
@@ -28,7 +28,7 @@ unsafe extern "system" fn set_user_interface_language_code<T: AddInWrapper>(
     this: &mut This<T>,
     lang: *const u16,
 ) {
-    let component = this.get_component();
-    let lang = get_str(lang);
+    let component = unsafe { this.get_component() };
+    let lang = unsafe { U16CStr::from_ptr_str(lang) };
     component.addin.set_user_interface_language_code(lang)
 }

@@ -21,7 +21,7 @@ unsafe extern "system" fn init<T: AddInWrapper>(
     this: &mut This<T>,
     interface: &'static Connection,
 ) -> bool {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     component.addin.init(interface)
 }
 
@@ -29,7 +29,7 @@ unsafe extern "system" fn set_mem_manager<T: AddInWrapper>(
     this: &mut This<T>,
     mem: &'static MemoryManager,
 ) -> bool {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     component.memory_manager_ptr = Some(mem);
     true
 }
@@ -37,12 +37,12 @@ unsafe extern "system" fn set_mem_manager<T: AddInWrapper>(
 unsafe extern "system" fn get_info<T: AddInWrapper>(
     this: &mut This<T>,
 ) -> c_long {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     component.addin.get_info() as c_long
 }
 
 unsafe extern "system" fn done<T: AddInWrapper>(this: &mut This<T>) {
-    let component = this.get_component();
+    let component = unsafe { this.get_component() };
     component.addin.done()
 }
 

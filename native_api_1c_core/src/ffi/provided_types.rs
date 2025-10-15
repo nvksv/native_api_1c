@@ -3,6 +3,7 @@ use std::{
     ptr,
     slice::from_raw_parts,
 };
+use widestring::U16CString;
 
 use chrono::{Datelike, Timelike};
 
@@ -234,11 +235,10 @@ impl<'a> From<&'a TVariant> for ParamValue {
                 VariantType::Double => Self::F64(param.value.f64),
                 VariantType::Time => Self::Date(param.value.tm),
                 VariantType::WStr => Self::String(
-                    from_raw_parts(
+                    U16CString::from_ptr_truncate(
                         param.value.data_str.ptr,
                         param.value.data_str.len as usize,
-                    )
-                    .into(),
+                    ),
                 ),
                 VariantType::Blob => Self::Blob(
                     from_raw_parts(
@@ -353,19 +353,20 @@ impl TVariant {
         mem_mngr: &MemoryManager,
         v: &[u16],
     ) -> Result<u32, AllocationError> {
-        let old_pointer = self.value.data_str.ptr;
+        let data_str = unsafe { &mut self.value.data_str };
+        let old_pointer = data_str.ptr;
 
         let ptr = mem_mngr.alloc_str(v.len())?;
-        ptr::copy_nonoverlapping(v.as_ptr(), ptr.as_ptr(), v.len());
+        unsafe { ptr::copy_nonoverlapping(v.as_ptr(), ptr.as_ptr(), v.len()) };
 
-        self.value.data_str.ptr = ptr.as_ptr();
-        self.value.data_str.len = v.len() as u32;
+        data_str.ptr = ptr.as_ptr();
+        data_str.len = v.len() as u32;
 
         mem_mngr.free_memory(&mut old_pointer.cast::<c_void>());
 
         self.vt = VariantType::WStr;
 
-        Ok(self.value.data_str.len)
+        Ok(data_str.len)
     }
 
     /// # Safety
@@ -376,19 +377,20 @@ impl TVariant {
         mem_mngr: &MemoryManager,
         v: &[u8],
     ) -> Result<u32, AllocationError> {
-        let old_pointer = self.value.data_blob.ptr;
+        let data_blob = unsafe { &mut self.value.data_blob };
+        let old_pointer = data_blob.ptr;
 
         let ptr = mem_mngr.alloc_blob(v.len())?;
-        ptr::copy_nonoverlapping(v.as_ptr(), ptr.as_ptr(), v.len());
+        unsafe { ptr::copy_nonoverlapping(v.as_ptr(), ptr.as_ptr(), v.len()) };
 
-        self.value.data_blob.ptr = ptr.as_ptr();
-        self.value.data_blob.len = v.len() as u32;
+        data_blob.ptr = ptr.as_ptr();
+        data_blob.len = v.len() as u32;
 
         mem_mngr.free_memory(&mut old_pointer.cast::<c_void>());
 
         self.vt = VariantType::Blob;
 
-        Ok(self.value.data_blob.len)
+        Ok(data_blob.len)
     }
 
     pub fn update_to_bool(&mut self, v: bool) {

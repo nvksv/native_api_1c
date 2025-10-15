@@ -1,6 +1,7 @@
 use std::ops::{Index, IndexMut};
 
 use crate::ffi::{connection::Connection, provided_types::Tm};
+use widestring::{U16CString, U16CStr};
 
 /// Represents 1C variant values for parameters in safe Rust code.
 #[derive(Clone, Debug)]
@@ -16,7 +17,7 @@ pub enum ParamValue {
     /// Date-time value
     Date(Tm),
     /// UTF-16 string value
-    String(Vec<u16>),
+    String(U16CString),
     /// Blob value
     Blob(Vec<u8>),
 }
@@ -38,7 +39,7 @@ impl ParamValue {
         *self = Self::Date(val);
     }
 
-    pub fn set_str(&mut self, val: Vec<u16>) {
+    pub fn set_str(&mut self, val: U16CString) {
         *self = Self::String(val);
     }
 
@@ -138,8 +139,8 @@ pub trait AddInWrapper {
     /// Equivalent to `RegisterExtensionAs` from Native API interface and is used to get the name of the AddIn
     /// as it will be shown in 1C platform
     /// # Returns
-    /// `&[u16]` - name of the AddIn in UTF-16 with null-terminator
-    fn register_extension_as(&mut self) -> &[u16];
+    /// `&U16CStr` - name of the AddIn in UTF-16 with null-terminator
+    fn register_extension_as(&mut self) -> &U16CStr;
 
     /// Equivalent to `GetNProps` from Native API interface and is used to get the number of properties
     /// that the AddIn has that can be accessed by 1C platform
@@ -153,7 +154,7 @@ pub trait AddInWrapper {
     /// * `name` - name of the property in UTF-16
     /// # Returns
     /// `Option<usize>` - index of the property or None if the property was not found
-    fn find_prop(&self, name: &[u16]) -> Option<usize>;
+    fn find_prop(&self, name: &U16CStr) -> Option<usize>;
 
     /// Equivalent to `GetPropName` from Native API interface and is used to get the name of the property
     /// with the given index
@@ -161,8 +162,8 @@ pub trait AddInWrapper {
     /// * `num` - index of the property
     /// * `alias` - alias of the property, usually 0 for Russian and 1 for English
     /// # Returns
-    /// `Option<Vec<u16>>` - name of the property in UTF-16 or None if the property was not found
-    fn get_prop_name(&self, num: usize, alias: usize) -> Option<Vec<u16>>;
+    /// `Option<&U16CStr>` - name of the property in UTF-16 or None if the property was not found
+    fn get_prop_name(&self, num: usize, alias: usize) -> Option<&U16CStr>;
 
     /// Equivalent to `GetPropVal` from Native API interface and is used to get the value of the property
     /// with the given index
@@ -213,7 +214,7 @@ pub trait AddInWrapper {
     /// * `name` - name of method in UTF-16
     /// # Returns
     /// `Option<usize>` - index of method or None if method was not found
-    fn find_method(&self, name: &[u16]) -> Option<usize>;
+    fn find_method(&self, name: &U16CStr) -> Option<usize>;
 
     /// Equivalent to `GetMethodName` from Native API interface and is used to get the name of method
     /// with the given index
@@ -221,8 +222,8 @@ pub trait AddInWrapper {
     /// * `num` - index of method
     /// * `alias` - alias of method, usually 0 for Russian and 1 for English
     /// # Returns
-    /// `Option<Vec<u16>>` - name of method in UTF-16 or None if method was not found
-    fn get_method_name(&self, num: usize, alias: usize) -> Option<Vec<u16>>;
+    /// `Option<&U16CStr>` - name of method in UTF-16 or None if method was not found
+    fn get_method_name(&self, num: usize, alias: usize) -> Option<&U16CStr>;
 
     /// Equivalent to `GetNParams` from Native API interface and is used to get the number of parameters
     /// that method with the given index has
@@ -282,11 +283,11 @@ pub trait AddInWrapper {
     /// Equivalent to `SetLocale` from Native API interface and is used to set the locale
     /// of the AddIn. It's marked as deprecated in 1C documentation, but is still available
     /// for use with platform versions prior to 8.3.21
-    fn set_locale(&mut self, loc: &[u16]);
+    fn set_locale(&mut self, loc: &U16CStr);
 
     /// Equivalent to `SetUserInterfaceLanguageCode` from Native API interface and is used to
     /// pass the language code of the 1C platform interface to the AddIn
     /// # Arguments
     /// * `lang` - language code in UTF-16, two letters
-    fn set_user_interface_language_code(&mut self, lang: &[u16]);
+    fn set_user_interface_language_code(&mut self, lang: &U16CStr);
 }
