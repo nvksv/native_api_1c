@@ -1,7 +1,9 @@
-use proc_macro2::TokenStream;
+use native_api_1c_core::interface::ParamValue;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
+use syn::Ident;
 
-use crate::derive_addin::{props::PropDesc, utils::expr_from_os_value};
+use crate::derive_addin::{props::PropDesc};
 
 use super::{empty_prop_collector_error, PropCollector};
 
@@ -27,11 +29,14 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for SetPropValCollector {
             }
 
             let prop_ident = &prop_desc.ident;
-            let prop_getter = expr_from_os_value(&quote! { val }, &prop_desc.ty);
+            let into_type_fn = Ident::new(ParamValue::into_type_fn_name(prop_desc.ty), Span::call_site());
+            // let prop_getter = expr_from_os_value(&quote! { val }, &prop_desc.ty);
 
             body.extend(quote! {
                 #prop_index => {
-                    self.#prop_ident = #prop_getter.into();
+                    self.#prop_ident = native_api_1c::native_api_1c_core::interface::ParamValue::#into_type_fn(val)
+                        .ok_or(())?
+                        .into();
                     Ok(())
                 },
             });

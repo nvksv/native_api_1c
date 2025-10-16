@@ -4,9 +4,10 @@ use darling::FromMeta;
 use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 
+use native_api_1c_core::interface::ParamType;
+
 use super::{
     constants::{BLOB_TYPE, BOOL_TYPE, DATE_TYPE, F64_TYPE, I32_TYPE, STRING_TYPE},
-    parsers::ParamType,
 };
 
 pub mod collectors;

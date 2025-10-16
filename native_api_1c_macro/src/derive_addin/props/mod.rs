@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, TokenStream};
 
-use super::parsers::ParamType;
+use native_api_1c_core::interface::ParamType;
 
 pub mod collectors;
 pub mod generate;

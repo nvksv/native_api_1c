@@ -3,8 +3,10 @@ use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
 use syn::{spanned::Spanned, Attribute, DataStruct, Meta};
 
+use native_api_1c_core::interface::ParamType;
+
 use crate::derive_addin::{
-    parsers::{ParamType, PropName},
+    parsers::{PropName, ParamTypeWrapper},
     utils::ident_option_to_darling_err,
 };
 
@@ -183,14 +185,14 @@ impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
 
 #[derive(FromMeta, Debug)]
 struct FuncReturnMeta {
-    ty: Option<ParamType>,
+    ty: Option<ParamTypeWrapper>,
     result: Option<()>,
 }
 
 impl From<FuncReturnMeta> for ReturnTypeDesc {
     fn from(arg_meta: FuncReturnMeta) -> Self {
         Self {
-            ty: arg_meta.ty,
+            ty: arg_meta.ty.map(|p| p.0),
             result: arg_meta.result.is_some(),
         }
     }

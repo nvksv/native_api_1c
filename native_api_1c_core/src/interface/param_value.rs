@@ -1,7 +1,7 @@
 use std::ops::{Index, IndexMut};
 
 use crate::ffi::{provided_types::Tm};
-use widestring::{U16CString, U16CStr};
+use widestring::U16CString;
 use super::param_type::ParamType;
 
 /// Represents 1C variant values for parameters in safe Rust code.
@@ -24,76 +24,238 @@ pub enum ParamValue {
 }
 
 impl ParamValue {
-    pub fn new_bool(val: bool) -> Self {
-        Self::Bool(val)
+    pub fn from_bool(val: impl Into<bool>) -> Self {
+        Self::Bool(val.into())
     }
 
-    pub fn new_i32(&mut self, val: i32) -> Self {
-        Self::I32(val)
+    pub fn from_i32(val: impl Into<i32>) -> Self {
+        Self::I32(val.into())
     }
 
-    pub fn new_f64(&mut self, val: f64) -> Self {
-        Self::F64(val)
+    pub fn from_f64(val: impl Into<f64>) -> Self {
+        Self::F64(val.into())
     }
 
-    pub fn new_date(&mut self, val: Tm) -> Self {
-        Self::Date(val)
+    pub fn from_date(val: impl Into<Tm>) -> Self {
+        Self::Date(val.into())
     }
 
-    pub fn new_str(&mut self, val: U16CString) -> Self {
-        Self::String(val)
+    pub fn from_str(val: impl AsRef<str>) -> Self {
+        Self::String(U16CString::from_str_truncate(val))
     }
 
-    pub fn new_blob(&mut self, val: Vec<u8>) -> Self {
-        Self::Blob(val)
+    pub fn from_blob(val: impl Into<Vec<u8>>) -> Self {
+        Self::Blob(val.into())
     }
 
+    //
 
-    pub fn set_bool(&mut self, val: bool) {
-        *self = Self::Bool(val);
+    pub fn into_bool(self) -> Option<bool> {
+        match self {
+            ParamValue::Bool(v) => Some(v),
+            _ => None
+        }
     }
 
-    pub fn set_i32(&mut self, val: i32) {
-        *self = Self::I32(val);
+    pub fn into_i32(self) -> Option<i32> {
+        match self {
+            ParamValue::I32(v) => Some(v),
+            _ => None
+        }
     }
 
-    pub fn set_f64(&mut self, val: f64) {
-        *self = Self::F64(val);
+    pub fn into_f64(self) -> Option<f64> {
+        match self {
+            ParamValue::F64(v) => Some(v),
+            _ => None
+        }
     }
 
-    pub fn set_date(&mut self, val: Tm) {
-        *self = Self::Date(val);
+    pub fn into_date(self) -> Option<Tm> {
+        match self {
+            ParamValue::Date(v) => Some(v),
+            _ => None
+        }
     }
 
-    pub fn set_str(&mut self, val: U16CString) {
-        *self = Self::String(val);
+    pub fn into_str(self) -> Option<String> {
+        match self {
+            ParamValue::String(v) => Some(v.to_string_lossy()),
+            _ => None
+        }
     }
 
-    pub fn set_blob(&mut self, val: Vec<u8>) {
-        *self = Self::Blob(val);
+    pub fn into_blob(self) -> Option<Vec<u8>> {
+        match self {
+            ParamValue::Blob(v) => Some(v),
+            _ => None
+        }
     }
+
+    //
+
+    pub fn to_bool(&self) -> Option<bool> {
+        match self {
+            ParamValue::Bool(v) => Some(*v),
+            _ => None
+        }
+    }
+
+    pub fn to_i32(&self) -> Option<i32> {
+        match self {
+            ParamValue::I32(v) => Some(*v),
+            _ => None
+        }
+    }
+
+    pub fn to_f64(&self) -> Option<f64> {
+        match self {
+            ParamValue::F64(v) => Some(*v),
+            _ => None
+        }
+    }
+
+    pub fn to_date(&self) -> Option<Tm> {
+        match self {
+            ParamValue::Date(v) => Some(*v),
+            _ => None
+        }
+    }
+
+    pub fn to_str(&self) -> Option<String> {
+        match self {
+            ParamValue::String(v) => Some(v.to_string_lossy()),
+            _ => None
+        }
+    }
+
+    pub fn to_blob(&self) -> Option<Vec<u8>> {
+        match self {
+            ParamValue::Blob(v) => Some(v.clone()),
+            _ => None
+        }
+    }
+
+    //
+
+    pub fn set_bool(&mut self, val: impl Into<bool>) {
+        *self = Self::Bool(val.into());
+    }
+
+    pub fn set_i32(&mut self, val: impl Into<i32>) {
+        *self = Self::I32(val.into());
+    }
+
+    pub fn set_f64(&mut self, val: impl Into<f64>) {
+        *self = Self::F64(val.into());
+    }
+
+    pub fn set_date(&mut self, val: impl Into<Tm>) {
+        *self = Self::Date(val.into());
+    }
+
+    pub fn set_str(&mut self, val: impl AsRef<str>) {
+        *self = Self::String(U16CString::from_str_truncate(val));
+    }
+
+    pub fn set_blob(&mut self, val: impl Into<Vec<u8>>) {
+        *self = Self::Blob(val.into());
+    }
+
+    //
+
+
 }
 
 impl ParamValue {
-    fn to_type_fn_name(ty: ParamType) -> &'static str {
-        match ParamType {
+    pub fn from_type_fn_name(ty: ParamType) -> &'static str {
+        match ty {
+            ParamType::Bool => {
+                "from_bool"
+            }
+            ParamType::I32 => {
+                "from_i32"
+            }
+            ParamType::F64 => {
+                "from_f64"
+            }
+            ParamType::Date => {
+                "from_date"
+            }
+            ParamType::String => {
+                "from_str"
+            }
+            ParamType::Blob => {
+                "from_blob"
+            }
+        }
+    }
+
+    pub fn into_type_fn_name(ty: ParamType) -> &'static str {
+        match ty {
+            ParamType::Bool => {
+                "into_bool"
+            }
+            ParamType::I32 => {
+                "into_i32"
+            }
+            ParamType::F64 => {
+                "into_f64"
+            }
+            ParamType::Date => {
+                "into_date"
+            }
+            ParamType::String => {
+                "into_str"
+            }
+            ParamType::Blob => {
+                "into_blob"
+            }
+        }
+    }
+
+    pub fn to_type_fn_name(ty: ParamType) -> &'static str {
+        match ty {
             ParamType::Bool => {
                 "to_bool"
             }
             ParamType::I32 => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::I32 }
+                "to_i32"
             }
             ParamType::F64 => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::F64 }
+                "to_f64"
             }
             ParamType::Date => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Date }
+                "to_date"
             }
             ParamType::String => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::String }
+                "to_str"
             }
             ParamType::Blob => {
-                quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Blob }
+                "to_blob"
+            }
+        }
+    }
+
+    pub fn set_type_fn_name(ty: ParamType) -> &'static str {
+        match ty {
+            ParamType::Bool => {
+                "set_bool"
+            }
+            ParamType::I32 => {
+                "set_i32"
+            }
+            ParamType::F64 => {
+                "set_f64"
+            }
+            ParamType::Date => {
+                "set_date"
+            }
+            ParamType::String => {
+                "set_str"
+            }
+            ParamType::Blob => {
+                "set_blob"
             }
         }
     }

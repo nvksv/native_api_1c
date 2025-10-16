@@ -1,10 +1,11 @@
 use darling::{FromField, FromMeta};
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use syn::{Attribute, DataStruct};
 
 use crate::derive_addin::{parsers::PropName, utils::ident_option_to_darling_err};
 
-use super::{ParamType, PropDesc};
+use super::PropDesc;
+use super::super::parsers::ParamTypeWrapper;
 
 impl FromField for PropDesc {
     fn from_field(field: &syn::Field) -> darling::Result<Self> {
@@ -43,14 +44,14 @@ impl FromField for PropDesc {
 
             readable: prop_meta.readable.is_some(),
             writable: prop_meta.writable.is_some(),
-            ty: prop_meta.ty,
+            ty: prop_meta.ty.0,
         })
     }
 }
 
 #[derive(FromMeta, Debug)]
 pub struct PropMeta {
-    pub ty: ParamType,
+    pub ty: ParamTypeWrapper,
     pub name: PropName,
     pub name_ru: PropName,
     pub readable: Option<()>,

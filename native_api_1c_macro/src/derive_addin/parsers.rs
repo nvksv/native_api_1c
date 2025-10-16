@@ -1,13 +1,13 @@
 use darling::FromMeta;
-use proc_macro2::TokenStream;
-use quote::{quote, ToTokens};
+use quote::ToTokens;
 
 use super::constants::{BLOB_TYPE, BOOL_TYPE, DATE_TYPE, F64_TYPE, I32_TYPE, STRING_TYPE};
 use native_api_1c_core::interface::ParamType;
 
 const META_TYPE_ERR: &str = "expected string literal or path";
 
-struct ParamTypeWrapper(pub ParamType);
+#[derive(Debug)]
+pub struct ParamTypeWrapper(pub ParamType);
 
 impl FromMeta for ParamTypeWrapper {
     fn from_expr(expr: &syn::Expr) -> darling::Result<Self> {

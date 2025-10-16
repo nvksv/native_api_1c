@@ -1,9 +1,8 @@
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, ToTokens};
+use quote::quote;
 use syn::Ident;
 
-use crate::derive_addin::utils::{expr_from_os_value, expr_to_os_value};
-
+use native_api_1c_core::interface::ParamValue;
 use super::{FuncArgumentDesc, FuncDesc, FuncParamType};
 
 pub fn func_call_tkn(func: &FuncDesc, set_to: Option<&Ident>) -> TokenStream {
@@ -15,9 +14,10 @@ pub fn func_call_tkn(func: &FuncDesc, set_to: Option<&Ident>) -> TokenStream {
 
     for (param_index, param_desc) in func.get_1c_params().iter().enumerate() {
         let param_ident = Ident::new(&format!("param_{}", param_index + 1), Span::call_site());
+        let param_val_ident = Ident::new(&format!("param_val_{}", param_index + 1), Span::call_site());
 
         let (pre_call_param, post_call_param) =
-            gen_param_prep(param_desc, param_index, &param_ident);
+            gen_param_prep(param_desc, param_index, &param_ident, &param_val_ident);
 
         if func_args.is_empty() {
             func_args.extend(quote! {#param_ident})
@@ -52,9 +52,9 @@ pub fn func_call_tkn(func: &FuncDesc, set_to: Option<&Ident>) -> TokenStream {
 
     if let Some(set_to) = set_to {
         let return_ty = func.return_value.ty.clone().unwrap();
-        let result_wrap = expr_to_os_value(&quote! { call_result }, &return_ty, true);
+        let from_type_fn = Ident::new(ParamValue::from_type_fn_name(return_ty), Span::call_site());
         func_call.extend(quote! {
-            let #set_to = #result_wrap;
+            let #set_to = native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(call_result);
         });
     }
 
@@ -69,28 +69,38 @@ fn gen_param_prep(
     param: &FuncArgumentDesc,
     param_index: usize,
     param_ident: &Ident,
+    param_val_ident: &Ident,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let FuncParamType::PlatformType(param_ty) = &param.ty else {
         panic!("SelfType is not allowed here");
     };
 
-    let param_unwrap = expr_from_os_value(&quote! { params[#param_index] }, param_ty);
-    let mut pre_call = quote! {;
-        let #param_ident = #param_unwrap;
-        let mut #param_ident = #param_ident.clone().into();
+    let to_type_fn = Ident::new(ParamValue::to_type_fn_name(*param_ty), Span::call_site());
+
+    // let param_unwrap = expr_from_os_value(&quote! { params[#param_index] }, param_ty);
+    let param_value = quote! { 
+        native_api_1c::native_api_1c_core::interface::ParamValue::#to_type_fn(&params[#param_index])
+        .ok_or(())?
+        .into() 
     };
-    if param.out_param {
-        pre_call.extend(quote! {
-            let #param_ident = &mut #param_ident;
-        });
-    }
+    let pre_call = if param.out_param {
+        quote! {
+            let mut #param_val_ident = #param_value;
+            let #param_ident = &mut #param_val_ident;
+        }
+    } else {
+        quote! {
+            let #param_ident = #param_value;
+        }
+    };
 
     let post_call = if !param.out_param {
         quote! {}
     } else {
-        let param_wrap = expr_to_os_value(&param_ident.to_token_stream(), param_ty, false);
+        let set_type_fn = Ident::new(ParamValue::set_type_fn_name(*param_ty), Span::call_site());
+        // let param_wrap = expr_to_os_value(&param_ident.to_token_stream(), param_ty, false);
         quote! {
-            params[#param_index] = #param_wrap;
+            params[#param_index].#set_type_fn( #param_val_ident );
         }
     };
 

@@ -1,9 +1,9 @@
-use super::super::super::utils::expr_to_os_value;
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
+use syn::Ident;
 
+use native_api_1c_core::interface::ParamValue;
 use crate::derive_addin::functions::{FuncDesc, FuncParamType};
-
 use super::{empty_func_collector_error, FunctionCollector};
 
 pub struct GetParamDefValueCollector {
@@ -34,10 +34,11 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetParamDefValueCollector {
                     continue;
                 };
 
-                let expr = expr_to_os_value(expr, ty, true);
+                let from_type_fn = Ident::new(ParamValue::from_type_fn_name(*ty), Span::call_site());
+                // let expr = expr_to_os_value(expr, ty, true);
                 body.extend(quote! {
                     (#func_index, #arg_index) => {
-                        Some(#expr)
+                        Some(native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(#expr))
                     },
                 })
             }

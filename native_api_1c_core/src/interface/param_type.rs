@@ -1,6 +1,6 @@
 
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ParamType {
     Bool,
     I32,
