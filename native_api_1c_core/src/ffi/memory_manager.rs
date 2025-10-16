@@ -40,7 +40,7 @@ impl MemoryManager {
     ) -> Result<NonNull<u8>, AllocationError> {
         let mut ptr = ptr::null_mut::<c_void>();
         unsafe {
-            if (self.vptr.alloc_memory)(self, &mut ptr, size as c_ulong * 2) {
+            if (self.vptr.alloc_memory)(self, &mut ptr, size as c_ulong) {
                 match NonNull::new(ptr as *mut u8) {
                     Some(ptr) => Ok(ptr),
                     None => Err(AllocationError),
