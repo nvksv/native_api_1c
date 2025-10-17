@@ -19,11 +19,10 @@ pub fn func_call_tkn(func: &FuncDesc, set_to: Option<&Ident>) -> TokenStream {
         let (pre_call_param, post_call_param) =
             gen_param_prep(param_desc, param_index, &param_ident, &param_val_ident);
 
-        if func_args.is_empty() {
-            func_args.extend(quote! {#param_ident})
-        } else {
-            func_args.extend(quote! {, #param_ident});
+        if !func_args.is_empty() {
+            func_args.extend(quote! {,});
         }
+        func_args.extend(quote! { #param_ident });
 
         pre_call.extend(pre_call_param);
         post_call.extend(post_call_param);
@@ -43,10 +42,7 @@ pub fn func_call_tkn(func: &FuncDesc, set_to: Option<&Ident>) -> TokenStream {
 
     if func.return_value.result {
         func_call.extend(quote! {
-            if call_result.is_err() {
-                return Err(());
-            }
-            let call_result = call_result.unwrap();
+            let call_result = call_result?;
         });
     };
 
@@ -75,7 +71,10 @@ fn gen_param_prep(
         panic!("SelfType is not allowed here");
     };
 
-    let to_type_fn = Ident::new(ParamValue::to_type_fn_name(*param_ty), Span::call_site());
+    let to_type_fn = Ident::new(
+        if param.optional { ParamValue::to_optional_type_fn_name(*param_ty) } else { ParamValue::to_type_fn_name(*param_ty) }, 
+        Span::call_site()
+    );
 
     // let param_unwrap = expr_from_os_value(&quote! { params[#param_index] }, param_ty);
     let param_value = quote! { 

@@ -67,18 +67,19 @@ fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, dar
             &struct_ident.span()
         );
     };
-    let mut addin_name_literal = str_literal_token(&struct_ident.to_string(), struct_ident)?;
 
-    if let Some(addin_name) = get_addin_name_from_attribute(input)? {
-        addin_name_literal = addin_name;
-    }
+    let addin_name = if let Some(addin_name) = get_addin_name_from_attribute(input)? {
+        addin_name
+    } else {
+        str_literal_token(&struct_ident.to_string(), struct_ident)?
+    };
 
     let mut props = parse_props(struct_data)?;
     let mut functions = parse_functions(struct_data)?;
 
     let addin_name_const = Ident::new("ADDIN_NAME", Span::call_site());
     let addin_consts = quote! {
-        const #addin_name_const: &'static native_api_1c::native_api_1c_core::widestring::U16CStr = const { native_api_1c::native_api_1c_core::widestring::u16cstr!(#addin_name_literal) };
+        const #addin_name_const: &'static native_api_1c::native_api_1c_core::widestring::U16CStr = const { native_api_1c::native_api_1c_core::widestring::u16cstr!(#addin_name) };
     };
 
     let pi = props.iter_mut().enumerate();
@@ -140,6 +141,7 @@ fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, dar
 
             fn set_locale(&mut self, loc: &native_api_1c::native_api_1c_core::widestring::U16CStr) {
             }
+
             fn set_user_interface_language_code(&mut self, lang: &native_api_1c::native_api_1c_core::widestring::U16CStr) {
             }
         }

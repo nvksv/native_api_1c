@@ -97,6 +97,7 @@ impl FromField for FuncDesc {
                         FuncArgumentDesc {
                             ty: FuncParamType::SelfType,
                             default: None,
+                            optional: false,
                             out_param: reference.mutability.is_some(),
                         },
                     )
@@ -132,6 +133,7 @@ struct FuncArgumentMeta {
     ident: Option<syn::Ident>,
     ty: FuncParamType,
     default: Option<Meta>,
+    optional: Option<()>,
     #[allow(dead_code)]
     as_in: Option<()>,
     as_out: Option<()>,
@@ -178,6 +180,7 @@ impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
         Ok(Self {
             ty: arg_meta.ty,
             default: default_fixed,
+            optional: arg_meta.optional.is_some(),
             out_param: arg_meta.as_out.is_some(),
         })
     }

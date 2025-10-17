@@ -30,12 +30,7 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for GetPropValCollector {
             }
 
             let prop_ident = &prop_desc.ident;
-            // let prop_setter = expr_to_os_value(&quote! {self.#prop_ident}, &prop_desc.ty, false);
-            // body.extend(quote! {
-            //     #prop_index => {
-            //         Ok(#prop_setter)
-            //     },
-            // });
+
             let from_type_fn = Ident::new(ParamValue::from_type_fn_name(prop_desc.ty), Span::call_site());
             body.extend(quote! {
                 #prop_index => {

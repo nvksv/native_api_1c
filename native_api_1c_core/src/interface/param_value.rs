@@ -138,6 +138,55 @@ impl ParamValue {
 
     //
 
+    pub fn to_optional_bool(&self) -> Option<Option<bool>> {
+        match self {
+            ParamValue::Bool(v) => Some(Some(*v)),
+            _ => None
+        }
+    }
+
+    pub fn to_optional_i32(&self) -> Option<Option<i32>> {
+        match self {
+            ParamValue::Empty => Some(None),
+            ParamValue::I32(v) => Some(Some(*v)),
+            _ => None
+        }
+    }
+
+    pub fn to_optional_f64(&self) -> Option<Option<f64>> {
+        match self {
+            ParamValue::Empty => Some(None),
+            ParamValue::F64(v) => Some(Some(*v)),
+            _ => None
+        }
+    }
+
+    pub fn to_optional_date(&self) -> Option<Option<Tm>> {
+        match self {
+            ParamValue::Empty => Some(None),
+            ParamValue::Date(v) => Some(Some(*v)),
+            _ => None
+        }
+    }
+
+    pub fn to_optional_str(&self) -> Option<Option<String>> {
+        match self {
+            ParamValue::Empty => Some(None),
+            ParamValue::String(v) => Some(Some(v.to_string_lossy())),
+            _ => None
+        }
+    }
+
+    pub fn to_optional_blob(&self) -> Option<Option<Vec<u8>>> {
+        match self {
+            ParamValue::Empty => Some(None),
+            ParamValue::Blob(v) => Some(Some(v.clone())),
+            _ => None
+        }
+    }
+
+    //
+
     pub fn set_bool(&mut self, val: impl Into<bool>) {
         *self = Self::Bool(val.into());
     }
@@ -233,6 +282,29 @@ impl ParamValue {
             }
             ParamType::Blob => {
                 "to_blob"
+            }
+        }
+    }
+
+    pub fn to_optional_type_fn_name(ty: ParamType) -> &'static str {
+        match ty {
+            ParamType::Bool => {
+                "to_optional_bool"
+            }
+            ParamType::I32 => {
+                "to_optional_i32"
+            }
+            ParamType::F64 => {
+                "to_optional_f64"
+            }
+            ParamType::Date => {
+                "to_optional_date"
+            }
+            ParamType::String => {
+                "to_optional_str"
+            }
+            ParamType::Blob => {
+                "to_optional_blob"
             }
         }
     }

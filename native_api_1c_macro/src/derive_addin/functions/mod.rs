@@ -49,6 +49,7 @@ impl FuncDesc {
 pub struct FuncArgumentDesc {
     pub ty: FuncParamType,
     pub default: Option<TokenStream>,
+    pub optional: bool,
     pub out_param: bool,
 }
 
