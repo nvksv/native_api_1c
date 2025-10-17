@@ -9,4 +9,3 @@ crate-type = ["cdylib"]
 [dependencies]
 native_api_1c = { path = "../native_api_1c" }
 chrono = "0.4.26"
-widestring = "1.2.1"
