@@ -24,6 +24,10 @@ pub enum ParamValue {
 }
 
 impl ParamValue {
+    pub fn new_empty() -> Self {
+        Self::Empty
+    }
+
     pub fn from_bool(val: impl Into<bool>) -> Self {
         Self::Bool(val.into())
     }

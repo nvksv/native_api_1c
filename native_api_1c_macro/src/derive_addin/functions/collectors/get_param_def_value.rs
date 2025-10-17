@@ -24,21 +24,25 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetParamDefValueCollector {
 
         for (func_index, func_desc) in iter {
             for (arg_index, arg_desc) in func_desc.get_1c_params().iter().enumerate() {
-                let Some(expr) = &arg_desc.default else {
-                    // Skip parameters without default value
+                let default_value;
+
+                if arg_desc.optional {
+                    default_value = quote! { native_api_1c::native_api_1c_core::interface::ParamValue::new_empty() }
+
+                } else if let Some(expr) = &arg_desc.default {
+                    let FuncParamType::PlatformType(ty) = &arg_desc.ty else {
+                        // Skip parameters that is not platform type
+                        continue;
+                    };
+                    let from_type_fn = Ident::new(ParamValue::from_type_fn_name(*ty), Span::call_site());
+                    default_value = quote! { native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(#expr) }
+                } else {
                     continue;
                 };
 
-                let FuncParamType::PlatformType(ty) = &arg_desc.ty else {
-                    // Skip parameters that is not platform type
-                    continue;
-                };
-
-                let from_type_fn = Ident::new(ParamValue::from_type_fn_name(*ty), Span::call_site());
-                // let expr = expr_to_os_value(expr, ty, true);
                 body.extend(quote! {
                     (#func_index, #arg_index) => {
-                        Some(native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(#expr))
+                        Some(#default_value)
                     },
                 })
             }

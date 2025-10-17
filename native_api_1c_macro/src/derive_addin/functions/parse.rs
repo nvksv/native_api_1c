@@ -151,6 +151,14 @@ impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
             ));
         }
 
+        if arg_meta.default.is_some() && arg_meta.optional.is_some() {
+            return Err(Self::Error::ConflictingParams(
+                arg_meta.ident.span(),
+                "default".to_string(),
+                "optional".to_string(),
+            ));
+        }
+
         let allowed_defaults = match arg_meta.ty.clone() {
             FuncParamType::SelfType => false,
             FuncParamType::PlatformType(ty) => match ty {
