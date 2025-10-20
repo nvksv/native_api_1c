@@ -1,11 +1,9 @@
-use std::sync::Arc;
-
 use darling::FromMeta;
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 
 use super::constants::{BLOB_TYPE, BOOL_TYPE, DATE_TYPE, F64_TYPE, I32_TYPE, STRING_TYPE};
-use native_api_1c_core::interface::{ParamType, ParamValue};
+use native_api_1c_core::interface::ParamType;
 
 const META_TYPE_ERR: &str = "expected string literal or path";
 
@@ -87,22 +85,47 @@ pub struct ParamValueWrapper {
 }
 
 impl FromMeta for ParamValueWrapper {
-    fn from_meta(meta: &syn::Meta) -> darling::Result<Self> {
+    fn from_expr(expr: &syn::Expr) -> darling::Result<Self> {
+        // println!("expr = {:?}", expr);
         let meta_type_err = darling::Error::custom(META_TYPE_ERR);
-        match meta {
-            syn::Meta::NameValue(nv) => {
-                // let ty = ParamTypeWrapper::from_string(&nv.path.segments.first().unwrap().ident.to_string())?;
-                let value = &nv.value;
-                println!("value = {:?}", value);
-                // .to_token_stream();
-                // Ok(ParamValueWrapper {
-                //     ty: ty.0,
-                //     value,
-                // })
-                Err(meta_type_err)
+        
+        match expr {
+            syn::Expr::Call(syn::ExprCall{ func, args, ..}) => {
+                let ty = match func.as_ref() {
+                    syn::Expr::Path(path) => {
+                        ParamTypeWrapper::from_string(&path.path.segments.first().unwrap().ident.to_string())?
+                    },
+                    _ => return Err(meta_type_err),
+                };
+
+                let value = if args.len() == 1 {
+                    &args[0]
+                } else {
+                    return Err(meta_type_err);
+                };
+
+                Ok(ParamValueWrapper {
+                    ty: ty.0,
+                    value: value.to_token_stream(),
+                })
             },
             _ => return Err(meta_type_err),
         }
+
+        // match meta {
+        //     syn::Meta::NameValue(nv) => {
+        //         // let ty = ParamTypeWrapper::from_string(&nv.path.segments.first().unwrap().ident.to_string())?;
+        //         let value = &nv.value;
+        //         println!("value = {:?}", value);
+        //         // .to_token_stream();
+        //         // Ok(ParamValueWrapper {
+        //         //     ty: ty.0,
+        //         //     value,
+        //         // })
+        //     },
+        //     _ => return Err(meta_type_err),
+        // }
+        // Err(meta_type_err)
 
         // Err(meta_type_err)
         // match expr {

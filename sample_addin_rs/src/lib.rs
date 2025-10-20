@@ -31,9 +31,9 @@ pub struct SampleAddIn {
     /// If function returns an error, but does not panic, then 1C will throw an exception
     #[add_in_func(name = "MyFunction", name_ru = "МояФункция")]
     #[arg(ty = Int)]
-    #[arg(ty = Int, optional = Int(12))]
+    #[arg(ty = Int, optional = Bool(false))]
     #[returns(ty = Int, result)]
-    pub my_function: fn(&Self, i32, i64) -> Result<i32, ()>,
+    pub my_function: fn(&Self, i32, Option<i32>) -> Result<i32, ()>,
 
     /// Function, taking no arguments and returning nothing
     #[add_in_func(name = "MyProcedure", name_ru = "МояПроцедура")]
@@ -57,12 +57,12 @@ impl Default for SampleAddIn {
 }
 
 impl SampleAddIn {
-    fn my_function_inner(&self, arg: i32, arg_maybe_default: i64) -> Result<i32, ()> {
+    fn my_function_inner(&self, arg: i32, arg_maybe_default: Option<i32>) -> Result<i32, ()> {
         Ok(self.protected_prop
             + self.some_prop
             + arg
             + self.private_field
-            + arg_maybe_default as i32)
+            + arg_maybe_default.unwrap_or_default() as i32)
     }
 
     fn my_procedure_inner(&mut self) {

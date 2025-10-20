@@ -1,7 +1,7 @@
 use darling::{FromField, FromMeta};
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
-use syn::{spanned::Spanned, Attribute, DataStruct, Meta, MetaList};
+use syn::{spanned::Spanned, Attribute, DataStruct, Meta};
 
 use native_api_1c_core::interface::ParamType;
 

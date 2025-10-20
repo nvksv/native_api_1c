@@ -94,18 +94,20 @@ fn gen_param_prep(
         panic!("SelfType is not allowed here");
     };
 
+    let mut pre_call = quote! {};
+
     let param_value = if let Some(ParamValueWrapper{ ty: none_value_ty, value: none_value }) = &param.optional {
         let to_optional_type_fn = Ident::new( ParamValue::to_optional_type_fn_name(*param_ty), param.span );
 
         let from_type_fn = Ident::new(ParamValue::from_type_fn_name(*none_value_ty), none_value.span());
-        quote_spanned! { param.span =>
-            default_value = quote_spanned! { arg_desc.span => 
-                native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(#none_value) 
-            };
+        pre_call.extend(quote_spanned! { param.span =>
+            let none_value = native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(#none_value);
+        });
 
-            native_api_1c::native_api_1c_core::interface::ParamValue::#to_optional_type_fn(&params[#param_index], #none_value)
-            .ok_or(())?
-            .into() 
+        quote_spanned! { param.span =>
+            native_api_1c::native_api_1c_core::interface::ParamValue::#to_optional_type_fn(&params[#param_index], &none_value)
+                .ok_or(())?
+                .into() 
         }
     } else {
         let to_type_fn = Ident::new( ParamValue::to_type_fn_name(*param_ty), param.span );
@@ -117,15 +119,15 @@ fn gen_param_prep(
         }
     };
 
-    let pre_call = if param.out_param {
-        quote_spanned! { param.span =>
+    if param.out_param {
+        pre_call.extend( quote_spanned! { param.span =>
             let mut #param_val_ident = #param_value;
             let #param_ident = &mut #param_val_ident;
-        }
+        } )
     } else {
-        quote_spanned! { param.span =>
+        pre_call.extend( quote_spanned! { param.span =>
             let #param_ident = #param_value;
-        }
+        })
     };
 
     let post_call = if !param.out_param {
