@@ -3,7 +3,7 @@ use quote::{quote, quote_spanned};
 use syn::Ident;
 
 use native_api_1c_core::interface::ParamValue;
-use crate::derive_addin::functions::{FuncDesc, FuncParamType};
+use crate::derive_addin::{functions::{FuncDesc, FuncParamType}, parsers::ParamValueWrapper};
 use super::{empty_func_collector_error, FunctionCollector};
 
 pub struct GetParamDefValueCollector {
@@ -26,9 +26,10 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetParamDefValueCollector {
             for (arg_index, arg_desc) in func_desc.get_1c_params().iter().enumerate() {
                 let default_value;
 
-                if arg_desc.optional {
-                    default_value = quote_spanned! { arg_desc.span =>
-                        native_api_1c::native_api_1c_core::interface::ParamValue::new_empty() 
+                if let Some(ParamValueWrapper{ ty, value}) = &arg_desc.optional {
+                    let from_type_fn = Ident::new(ParamValue::from_type_fn_name(*ty), arg_desc.span);
+                    default_value = quote_spanned! { arg_desc.span => 
+                        native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(#value) 
                     };
 
                 } else if let Some(expr) = &arg_desc.default {

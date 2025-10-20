@@ -1,12 +1,12 @@
 use darling::{FromField, FromMeta};
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
-use syn::{spanned::Spanned, Attribute, DataStruct, Meta};
+use syn::{spanned::Spanned, Attribute, DataStruct, Meta, MetaList};
 
 use native_api_1c_core::interface::ParamType;
 
 use crate::derive_addin::{
-    parsers::{PropName, ParamTypeWrapper},
+    parsers::{PropName, ParamTypeWrapper, ParamValueWrapper},
     utils::ident_option_to_darling_err,
 };
 
@@ -103,7 +103,7 @@ impl FromField for FuncDesc {
                         FuncArgumentDesc {
                             ty: FuncParamType::SelfType,
                             default: None,
-                            optional: false,
+                            optional: None,
                             out_param: reference.mutability.is_some(),
                             span: first_input.span(),
                         },
@@ -140,7 +140,7 @@ struct FuncArgumentMeta {
     ident: Option<syn::Ident>,
     ty: FuncParamType,
     default: Option<Meta>,
-    optional: Option<()>,
+    optional: Option<ParamValueWrapper>,
     #[allow(dead_code)]
     as_in: Option<()>,
     as_out: Option<()>,
@@ -191,13 +191,15 @@ impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
         let default_fixed = arg_meta.default.map(|d| match d {
             Meta::NameValue(nv) => Ok(nv.value.to_token_stream()),
             _ => Err(Self::Error::UnexpectedMetaType(arg_meta.ident.span())),
-        });
-        let default_fixed = default_fixed.transpose()?;
+        }).transpose()?;
+
+        let optional_fixed = arg_meta.optional;
+        // let optional_fixed = optional_fixed.transpose()?;
 
         Ok(Self {
             ty: arg_meta.ty,
             default: default_fixed,
-            optional: arg_meta.optional.is_some(),
+            optional: optional_fixed,
             out_param: arg_meta.as_out.is_some(),
             span: arg_meta.span.unwrap(),
         })

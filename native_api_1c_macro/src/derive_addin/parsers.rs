@@ -1,8 +1,11 @@
+use std::sync::Arc;
+
 use darling::FromMeta;
+use proc_macro2::TokenStream;
 use quote::ToTokens;
 
 use super::constants::{BLOB_TYPE, BOOL_TYPE, DATE_TYPE, F64_TYPE, I32_TYPE, STRING_TYPE};
-use native_api_1c_core::interface::ParamType;
+use native_api_1c_core::interface::{ParamType, ParamValue};
 
 const META_TYPE_ERR: &str = "expected string literal or path";
 
@@ -74,5 +77,43 @@ impl From<PropName> for proc_macro2::TokenStream {
             PropName::StringLiteral(str_lit) => str_lit.to_token_stream(),
             PropName::Ident(ident) => ident.to_token_stream(),
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct ParamValueWrapper {
+    pub ty: ParamType,
+    pub value: TokenStream,
+}
+
+impl FromMeta for ParamValueWrapper {
+    fn from_meta(meta: &syn::Meta) -> darling::Result<Self> {
+        let meta_type_err = darling::Error::custom(META_TYPE_ERR);
+        match meta {
+            syn::Meta::NameValue(nv) => {
+                // let ty = ParamTypeWrapper::from_string(&nv.path.segments.first().unwrap().ident.to_string())?;
+                let value = &nv.value;
+                println!("value = {:?}", value);
+                // .to_token_stream();
+                // Ok(ParamValueWrapper {
+                //     ty: ty.0,
+                //     value,
+                // })
+                Err(meta_type_err)
+            },
+            _ => return Err(meta_type_err),
+        }
+
+        // Err(meta_type_err)
+        // match expr {
+        //     syn::Expr::Call(syn::ExprCall{ func, args, ..}) => {
+        //         let ty = ParamTypeWrapper::from_string(&func.path.segments.first().unwrap().ident.to_string())?;
+        //         Ok(ParamValueWrapper {
+        //             ty: ty.0,
+        //             value: list.tokens.clone(),
+        //         })
+        //     },
+        //     _ => return Err(meta_type_err),
+        // }
     }
 }

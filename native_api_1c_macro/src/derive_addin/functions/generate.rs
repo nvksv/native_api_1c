@@ -1,8 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::{quote, quote_spanned};
-use syn::Ident;
+use syn::{spanned::Spanned, Ident};
 
 use native_api_1c_core::interface::ParamValue;
+use crate::derive_addin::parsers::ParamValueWrapper;
+
 use super::{FuncArgumentDesc, FuncDesc, FuncParamType};
 
 pub fn func_call_tkn(func: &FuncDesc, set_to: Option<&Ident>) -> TokenStream {
@@ -92,15 +94,27 @@ fn gen_param_prep(
         panic!("SelfType is not allowed here");
     };
 
-    let to_type_fn = Ident::new(
-        if param.optional { ParamValue::to_optional_type_fn_name(*param_ty) } else { ParamValue::to_type_fn_name(*param_ty) }, 
-        param.span
-    );
+    let param_value = if let Some(ParamValueWrapper{ ty: none_value_ty, value: none_value }) = &param.optional {
+        let to_optional_type_fn = Ident::new( ParamValue::to_optional_type_fn_name(*param_ty), param.span );
 
-    let param_value = quote_spanned! { param.span =>
-        native_api_1c::native_api_1c_core::interface::ParamValue::#to_type_fn(&params[#param_index])
-        .ok_or(())?
-        .into() 
+        let from_type_fn = Ident::new(ParamValue::from_type_fn_name(*none_value_ty), none_value.span());
+        quote_spanned! { param.span =>
+            default_value = quote_spanned! { arg_desc.span => 
+                native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(#none_value) 
+            };
+
+            native_api_1c::native_api_1c_core::interface::ParamValue::#to_optional_type_fn(&params[#param_index], #none_value)
+            .ok_or(())?
+            .into() 
+        }
+    } else {
+        let to_type_fn = Ident::new( ParamValue::to_type_fn_name(*param_ty), param.span );
+
+        quote_spanned! { param.span =>
+            native_api_1c::native_api_1c_core::interface::ParamValue::#to_type_fn(&params[#param_index])
+            .ok_or(())?
+            .into() 
+        }
     };
 
     let pre_call = if param.out_param {

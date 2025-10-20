@@ -142,50 +142,57 @@ impl ParamValue {
 
     //
 
-    pub fn to_optional_bool(&self) -> Option<Option<bool>> {
-        match self {
-            ParamValue::Bool(v) => Some(Some(*v)),
-            _ => None
+    pub fn to_optional_bool(&self, none_value: &ParamValue) -> Option<Option<bool>> {
+        if self == none_value {
+            Some(None)
+        } else {
+            Self::to_bool(self)
+                .map( |value| Some(value) )
         }
     }
 
-    pub fn to_optional_i32(&self) -> Option<Option<i32>> {
-        match self {
-            ParamValue::Empty => Some(None),
-            ParamValue::I32(v) => Some(Some(*v)),
-            _ => None
+    pub fn to_optional_i32(&self, none_value: &ParamValue) -> Option<Option<i32>> {
+        if self == none_value {
+            Some(None)
+        } else {
+            Self::to_i32(self)
+                .map( |value| Some(value) )
         }
     }
 
-    pub fn to_optional_f64(&self) -> Option<Option<f64>> {
-        match self {
-            ParamValue::Empty => Some(None),
-            ParamValue::F64(v) => Some(Some(*v)),
-            _ => None
+    pub fn to_optional_f64(&self, none_value: &ParamValue) -> Option<Option<f64>> {
+        if self == none_value {
+            Some(None)
+        } else {
+            Self::to_f64(self)
+                .map( |value| Some(value) )
         }
     }
 
-    pub fn to_optional_date(&self) -> Option<Option<Tm>> {
-        match self {
-            ParamValue::Empty => Some(None),
-            ParamValue::Date(v) => Some(Some(*v)),
-            _ => None
+    pub fn to_optional_date(&self, none_value: &ParamValue) -> Option<Option<Tm>> {
+        if self == none_value {
+            Some(None)
+        } else {
+            Self::to_date(self)
+                .map( |value| Some(value) )
         }
     }
 
-    pub fn to_optional_str(&self) -> Option<Option<String>> {
-        match self {
-            ParamValue::Empty => Some(None),
-            ParamValue::String(v) => Some(Some(v.to_string_lossy())),
-            _ => None
+    pub fn to_optional_str(&self, none_value: &ParamValue) -> Option<Option<String>> {
+        if self == none_value {
+            Some(None)
+        } else {
+            Self::to_str(self)
+                .map( |value| Some(value) )
         }
     }
 
-    pub fn to_optional_blob(&self) -> Option<Option<Vec<u8>>> {
-        match self {
-            ParamValue::Empty => Some(None),
-            ParamValue::Blob(v) => Some(Some(v.clone())),
-            _ => None
+    pub fn to_optional_blob(&self, none_value: &ParamValue) -> Option<Option<Vec<u8>>> {
+        if self == none_value {
+            Some(None)
+        } else {
+            Self::to_blob(self)
+                .map( |value| Some(value) )
         }
     }
 

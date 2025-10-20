@@ -31,7 +31,7 @@ pub struct SampleAddIn {
     /// If function returns an error, but does not panic, then 1C will throw an exception
     #[add_in_func(name = "MyFunction", name_ru = "МояФункция")]
     #[arg(ty = Int)]
-    #[arg(ty = Int, default = 12)] // default value for the second argument
+    #[arg(ty = Int, optional = Int(12))]
     #[returns(ty = Int, result)]
     pub my_function: fn(&Self, i32, i64) -> Result<i32, ()>,
 

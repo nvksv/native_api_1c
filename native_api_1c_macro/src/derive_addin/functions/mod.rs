@@ -6,6 +6,8 @@ use quote::{quote, ToTokens};
 
 use native_api_1c_core::interface::ParamType;
 
+use crate::derive_addin::parsers::ParamValueWrapper;
+
 use super::{
     constants::{BLOB_TYPE, BOOL_TYPE, DATE_TYPE, F64_TYPE, I32_TYPE, STRING_TYPE},
 };
@@ -49,7 +51,7 @@ impl FuncDesc {
 pub struct FuncArgumentDesc {
     pub ty: FuncParamType,
     pub default: Option<TokenStream>,
-    pub optional: bool,
+    pub optional: Option<ParamValueWrapper>,
     pub out_param: bool,
     pub span: Span,
 }
