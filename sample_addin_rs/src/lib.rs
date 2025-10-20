@@ -73,3 +73,4 @@ impl SampleAddIn {
 extern_functions! {
     SampleAddIn::default(),
 }
+

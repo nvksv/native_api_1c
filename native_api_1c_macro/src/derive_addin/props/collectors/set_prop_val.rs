@@ -1,6 +1,6 @@
 use native_api_1c_core::interface::ParamValue;
-use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use proc_macro2::TokenStream;
+use quote::{quote, quote_spanned};
 use syn::Ident;
 
 use crate::derive_addin::{props::PropDesc};
@@ -29,10 +29,9 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for SetPropValCollector {
             }
 
             let prop_ident = &prop_desc.ident;
-            let into_type_fn = Ident::new(ParamValue::into_type_fn_name(prop_desc.ty), Span::call_site());
-            // let prop_getter = expr_from_os_value(&quote! { val }, &prop_desc.ty);
+            let into_type_fn = Ident::new(ParamValue::into_type_fn_name(prop_desc.ty), prop_desc.ident.span());
 
-            body.extend(quote! {
+            body.extend(quote_spanned! { prop_desc.ident.span() =>
                 #prop_index => {
                     self.#prop_ident = native_api_1c::native_api_1c_core::interface::ParamValue::#into_type_fn(val)
                         .ok_or(())?

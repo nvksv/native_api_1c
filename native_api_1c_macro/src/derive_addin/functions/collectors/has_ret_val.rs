@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
 
 use crate::derive_addin::functions::FuncDesc;
 
@@ -23,7 +23,7 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for HasReturnValueCollector {
 
         for (func_index, func_desc) in iter {
             let has_ret_val = func_desc.return_value.ty.is_some();
-            body.extend(quote! {
+            body.extend(quote_spanned! { func_desc.ident.span() =>
                 #func_index => { 
                     #has_ret_val 
                 },

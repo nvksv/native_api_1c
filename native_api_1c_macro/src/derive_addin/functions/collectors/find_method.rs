@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
 
 use crate::derive_addin::functions::FuncDesc;
 
@@ -25,7 +25,7 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for FindMethodCollector {
             let name_slice_const = &func_desc.name_slice_const;
             let name_ru_slice_const = &func_desc.name_ru_slice_const;
 
-            find_method_body.extend(quote! {
+            find_method_body.extend(quote_spanned! { func_desc.ident.span() =>
                 Self::#name_slice_const | Self::#name_ru_slice_const => { 
                     Some(#func_index)
                 },

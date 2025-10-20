@@ -1,5 +1,5 @@
-use proc_macro2::{Span, TokenStream};
-use quote::{quote, ToTokens};
+use proc_macro2::TokenStream;
+use quote::{quote_spanned, ToTokens};
 use syn::Ident;
 
 use crate::derive_addin::functions::FuncDesc;
@@ -26,12 +26,12 @@ impl<'a> FromIterator<(usize, &'a mut FuncDesc)> for FuncConstantsCollector {
             let name_literal = &func_desc.name_literal;
             let name_ru_literal = &func_desc.name_ru_literal;
 
-            let name_const = Ident::new(&format!("ADDIN_FUNC_NAME_{}", func_index + 1), Span::call_site());
-            let name_ru_const = Ident::new(&format!("ADDIN_FUNC_NAME_RU_{}", func_index + 1), Span::call_site());
-            let name_slice_const = Ident::new(&format!("ADDIN_FUNC_NAME_{}_SLICE", func_index + 1), Span::call_site());
-            let name_ru_slice_const = Ident::new(&format!("ADDIN_FUNC_NAME_RU_{}_SLICE", func_index + 1), Span::call_site());
+            let name_const = Ident::new(&format!("ADDIN_FUNC_NAME_{}", func_index + 1), func_desc.ident.span());
+            let name_ru_const = Ident::new(&format!("ADDIN_FUNC_NAME_RU_{}", func_index + 1), func_desc.ident.span());
+            let name_slice_const = Ident::new(&format!("ADDIN_FUNC_NAME_{}_SLICE", func_index + 1), func_desc.ident.span());
+            let name_ru_slice_const = Ident::new(&format!("ADDIN_FUNC_NAME_RU_{}_SLICE", func_index + 1), func_desc.ident.span());
 
-            body.extend(quote! {
+            body.extend(quote_spanned! { func_desc.ident.span() =>
                 const #name_const: &'static native_api_1c::native_api_1c_core::widestring::U16CStr = const { native_api_1c::native_api_1c_core::widestring::u16cstr!(#name_literal) };
                 const #name_slice_const: &'static [native_api_1c::native_api_1c_core::widestring::internals::core::primitive::u16] = const { Self::#name_const.as_slice_with_nul() };
                 const #name_ru_const: &'static native_api_1c::native_api_1c_core::widestring::U16CStr = const { native_api_1c::native_api_1c_core::widestring::u16cstr!(#name_ru_literal) };

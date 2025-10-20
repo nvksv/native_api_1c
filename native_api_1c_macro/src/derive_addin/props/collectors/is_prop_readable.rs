@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
 
 use crate::derive_addin::props::PropDesc;
 
@@ -24,7 +24,7 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for IsPropReadableCollector {
         for (prop_index, prop_desc) in iter {
             let readable = prop_desc.readable;
 
-            is_prop_readable_body.extend(quote! {
+            is_prop_readable_body.extend(quote_spanned! { prop_desc.ident.span() =>
                 #prop_index => { 
                     #readable
                 },

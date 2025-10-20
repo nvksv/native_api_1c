@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use darling::FromMeta;
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens};
 
 use native_api_1c_core::interface::ParamType;
@@ -51,6 +51,7 @@ pub struct FuncArgumentDesc {
     pub default: Option<TokenStream>,
     pub optional: bool,
     pub out_param: bool,
+    pub span: Span,
 }
 
 #[derive(Debug)]

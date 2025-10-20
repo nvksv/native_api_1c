@@ -56,7 +56,13 @@ impl FromField for FuncDesc {
         let func_meta = FuncHeadMeta::from_meta(&add_in_func_attr.meta)?;
         let params_meta = arg_attrs
             .iter()
-            .map(|attr| FuncArgumentMeta::from_meta(&attr.meta))
+            .map(|attr| {
+                let mut param = FuncArgumentMeta::from_meta(&attr.meta);
+                if let Ok(param) = &mut param {
+                    param.span = Some(attr.meta.span());
+                }
+                param
+            })
             .collect::<darling::Result<Vec<FuncArgumentMeta>>>()?;
         let return_meta = returns_attr
             .map(|attr| FuncReturnMeta::from_meta(&attr.meta))
@@ -99,6 +105,7 @@ impl FromField for FuncDesc {
                             default: None,
                             optional: false,
                             out_param: reference.mutability.is_some(),
+                            span: first_input.span(),
                         },
                     )
                 };
@@ -137,6 +144,8 @@ struct FuncArgumentMeta {
     #[allow(dead_code)]
     as_in: Option<()>,
     as_out: Option<()>,
+    #[darling(skip)]
+    span: Option<Span>,
 }
 
 impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
@@ -190,6 +199,7 @@ impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
             default: default_fixed,
             optional: arg_meta.optional.is_some(),
             out_param: arg_meta.as_out.is_some(),
+            span: arg_meta.span.unwrap(),
         })
     }
 }

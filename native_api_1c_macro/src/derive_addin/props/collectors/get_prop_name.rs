@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
 
 use crate::derive_addin::props::PropDesc;
 
@@ -25,7 +25,7 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for GetPropNameCollector {
             let name_const = &prop_desc.name_const;
             let name_ru_const = &prop_desc.name_ru_const;
 
-            get_prop_name_body.extend(quote! {
+            get_prop_name_body.extend(quote_spanned! { prop_desc.ident.span() =>
                 (#prop_index, 0) => { 
                     Some(Self::#name_const) 
                 },

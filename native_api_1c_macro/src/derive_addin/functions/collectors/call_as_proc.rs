@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
 
 use crate::derive_addin::functions::{generate::func_call_tkn, FuncDesc};
 
@@ -22,7 +22,7 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for CallAsProcCollector {
         let mut body = TokenStream::new();
         for (func_index, func_desc) in iter {
             let call_func = func_call_tkn(func_desc, None);
-            body.extend(quote! {
+            body.extend(quote_spanned! { func_desc.ident.span() =>
                 #func_index => {
                     #call_func
                     Ok(())

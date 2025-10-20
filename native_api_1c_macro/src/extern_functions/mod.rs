@@ -2,7 +2,7 @@ mod parse;
 
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{LitByte, LitStr, Ident};
+use syn::{spanned::Spanned, Ident, LitInt, LitStr};
 
 use parse::ExternAddInsDesc;
 
@@ -27,7 +27,7 @@ pub fn extern_functions(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     let mut get_class_object_body = TokenStream::new();
     for (i, add_in_desc) in extern_add_ins.components.iter().enumerate() {
         let alias = ASCII_LOWER[i];
-        let alias_literal = LitByte::new(alias as u8, Span::call_site());
+        let alias_literal = LitInt::new(&format!("{}", alias as u16), add_in_desc.init_tkn.span());
         let alias_literal = alias_literal.to_token_stream();
         let init_tkn = &add_in_desc.init_tkn;
 
@@ -39,7 +39,7 @@ pub fn extern_functions(input: proc_macro::TokenStream) -> proc_macro::TokenStre
         })
     }
     let get_class_object_body = quote! {
-        match *name as u8 {
+        match *name as u16 {
             #get_class_object_body
             _ => 0,
         }

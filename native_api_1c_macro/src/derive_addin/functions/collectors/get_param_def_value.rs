@@ -1,5 +1,5 @@
-use proc_macro2::{Span, TokenStream};
-use quote::quote;
+use proc_macro2::TokenStream;
+use quote::{quote, quote_spanned};
 use syn::Ident;
 
 use native_api_1c_core::interface::ParamValue;
@@ -27,20 +27,24 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for GetParamDefValueCollector {
                 let default_value;
 
                 if arg_desc.optional {
-                    default_value = quote! { native_api_1c::native_api_1c_core::interface::ParamValue::new_empty() }
+                    default_value = quote_spanned! { arg_desc.span =>
+                        native_api_1c::native_api_1c_core::interface::ParamValue::new_empty() 
+                    };
 
                 } else if let Some(expr) = &arg_desc.default {
                     let FuncParamType::PlatformType(ty) = &arg_desc.ty else {
                         // Skip parameters that is not platform type
                         continue;
                     };
-                    let from_type_fn = Ident::new(ParamValue::from_type_fn_name(*ty), Span::call_site());
-                    default_value = quote! { native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(#expr) }
+                    let from_type_fn = Ident::new(ParamValue::from_type_fn_name(*ty), arg_desc.span);
+                    default_value = quote_spanned! { arg_desc.span => 
+                        native_api_1c::native_api_1c_core::interface::ParamValue::#from_type_fn(#expr) 
+                    };
                 } else {
                     continue;
                 };
 
-                body.extend(quote! {
+                body.extend(quote_spanned! { func_desc.ident.span() =>
                     (#func_index, #arg_index) => {
                         Some(#default_value)
                     },
