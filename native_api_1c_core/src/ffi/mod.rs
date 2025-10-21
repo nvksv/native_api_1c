@@ -135,7 +135,8 @@ pub unsafe fn destroy_component(component: *mut *mut c_void) -> c_long {
         destroy: unsafe extern "system" fn(*mut *mut c_void),
     }
 
-    let wrapper = unsafe { &mut *(component as *mut ComponentWrapper) };
+    let wrapper_ptr = unsafe { *(component as *mut *mut ComponentWrapper) };
+    let wrapper = unsafe { &mut *wrapper_ptr };
     unsafe { (wrapper.destroy)(component) };
     unsafe { *component = ptr::null_mut() };
 

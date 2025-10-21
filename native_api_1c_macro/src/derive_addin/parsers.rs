@@ -6,6 +6,7 @@ use super::constants::{BLOB_TYPE, BOOL_TYPE, DATE_TYPE, F64_TYPE, I32_TYPE, STRI
 use native_api_1c_core::interface::ParamType;
 
 const META_TYPE_ERR: &str = "expected string literal or path";
+const META_TYPED_VALUE_ERR: &str = "expected typed value";
 
 #[derive(Debug)]
 pub struct ParamTypeWrapper(pub ParamType);
@@ -87,7 +88,7 @@ pub struct ParamValueWrapper {
 impl FromMeta for ParamValueWrapper {
     fn from_expr(expr: &syn::Expr) -> darling::Result<Self> {
         // println!("expr = {:?}", expr);
-        let meta_type_err = darling::Error::custom(META_TYPE_ERR);
+        let meta_type_err = darling::Error::custom(META_TYPED_VALUE_ERR);
         
         match expr {
             syn::Expr::Call(syn::ExprCall{ func, args, ..}) => {
@@ -111,32 +112,5 @@ impl FromMeta for ParamValueWrapper {
             },
             _ => return Err(meta_type_err),
         }
-
-        // match meta {
-        //     syn::Meta::NameValue(nv) => {
-        //         // let ty = ParamTypeWrapper::from_string(&nv.path.segments.first().unwrap().ident.to_string())?;
-        //         let value = &nv.value;
-        //         println!("value = {:?}", value);
-        //         // .to_token_stream();
-        //         // Ok(ParamValueWrapper {
-        //         //     ty: ty.0,
-        //         //     value,
-        //         // })
-        //     },
-        //     _ => return Err(meta_type_err),
-        // }
-        // Err(meta_type_err)
-
-        // Err(meta_type_err)
-        // match expr {
-        //     syn::Expr::Call(syn::ExprCall{ func, args, ..}) => {
-        //         let ty = ParamTypeWrapper::from_string(&func.path.segments.first().unwrap().ident.to_string())?;
-        //         Ok(ParamValueWrapper {
-        //             ty: ty.0,
-        //             value: list.tokens.clone(),
-        //         })
-        //     },
-        //     _ => return Err(meta_type_err),
-        // }
     }
 }
